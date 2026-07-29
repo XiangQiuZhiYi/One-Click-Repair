@@ -11,8 +11,9 @@ description: 通过 Codex 聊天批量拉取并逐条语义分析禅道中指派
 
 ### 预览阶段
 
-1. 查找配置并执行 `start`。优先读取 `ZENTAO_BUGFIX_CONFIG`，否则依次读取当前目录和
-   `/Users/zhiyi/Documents/bugfix-mcp-skill/.bugfix.local.json`。
+1. 执行本 Skill 的 `scripts/bugfix.mjs start`。执行器依次查找
+   `ZENTAO_BUGFIX_CONFIG`、当前目录的 `.bugfix.local.json`，以及 Codex 用户目录下
+   `zentao-frontend-bugfix/config.json`。
 2. Token 失效时，让脚本自动使用 macOS 钥匙串中的凭据重新登录并重试一次；不得在
    聊天中索取、显示或复述账号、密码及 Token。
 3. 读取 `triage.json`，逐条结合描述、复现步骤、期望结果和评论做语义分析。关键词
@@ -29,8 +30,10 @@ description: 通过 Codex 聊天批量拉取并逐条语义分析禅道中指派
    - 仓库待配置：尚未提供当前本地仓库目录。
 6. 对未映射的每个所属执行询问一次“当前本地仓库目录”。使用 Bug 详情中的
    `execution` ID 作为 `repositoriesByExecution` 的 key；执行名称只用于展示。
-   不自动搜索、推测或从禅道评论采信绝对路径。收到路径后立即写入本地配置，检查目录
-   是否可读写及 `package.json` 等项目文件，并重新分诊。后续同一执行自动复用目录。
+   不自动搜索、推测或从禅道评论采信绝对路径。收到路径后执行本 Skill 的
+   `scripts/bugfix.mjs repository --key EXECUTION_KEY --repo ABSOLUTE_PATH`，立即写入
+   本地配置，检查目录是否可读写及 `package.json` 等项目文件，并重新分诊。后续同一
+   执行自动复用目录。
 7. 仓库信息齐全后，再展示一次最终修改清单和等待确认清单，并明确提示：
    `如要开始修改，请回复：确认修改`。到此必须停止，不能读取代码后顺手修改。
 
@@ -44,8 +47,7 @@ description: 通过 Codex 聊天批量拉取并逐条语义分析禅道中指派
 2. 为每个 Bug 执行：
 
 ```bash
-node /absolute/path/to/skill/scripts/bugfix.mjs workspace \
-  --config /absolute/path/config.json \
+node /absolute/path/to/installed-skill/scripts/bugfix.mjs workspace \
   --report /absolute/path/triage.json \
   --bug BUG_ID \
   --confirmed
@@ -82,27 +84,26 @@ node /absolute/path/to/skill/scripts/bugfix.mjs workspace \
 
 ## 初始化和拉取
 
-安装后由用户仅执行一次：
+用户克隆 One-Click-Repair 后仅执行一次：
 
 ```bash
-npm run setup
+npm run bootstrap -- --base-url https://禅道地址/zentao
 ```
 
-账号保存在权限为 `0600` 的忽略文件，密码只保存在 macOS 钥匙串，短期 Token 保存在
-权限为 `0600` 的忽略文件。禅道开源版 21.6 使用 `source.type: zentao-v1`，直接请求
-REST API v1。
+初始化器将 Skill 安装到 Codex Skill 目录，将配置和运行数据保存到 Codex 用户目录的
+`zentao-frontend-bugfix/`。账号和 Token 文件权限为 `0600`，密码只保存在 macOS
+钥匙串。初始化后要求用户完全退出并重新打开 Codex。
 
-日常拉取由 Codex 后台运行：
+日常拉取由 Codex 运行当前已加载 Skill 目录中的：
 
 ```bash
-npm start
+node /absolute/path/to/installed-skill/scripts/bugfix.mjs start
 ```
 
 也可显式执行：
 
 ```bash
-node /absolute/path/to/skill/scripts/bugfix.mjs triage \
-  --config /absolute/path/config.json
+node /absolute/path/to/installed-skill/scripts/bugfix.mjs triage
 ```
 
 不得因为命令正常退出而停止流程；必须读取报告并完成预览。
@@ -111,7 +112,8 @@ node /absolute/path/to/skill/scripts/bugfix.mjs triage \
 
 收到用户给出的当前仓库目录后，读取
 [references/configuration.md](references/configuration.md)，将地址写入
-`repositoriesByExecution[executionId]`。配置保存在本地，后续同一所属执行不再询问。
+`repositoriesByExecution[executionId]`。必须使用 `repository --key --repo` 命令持久化，
+不要只记在聊天上下文中。后续同一所属执行不再询问。
 
 Bug 没有所属执行或执行 ID 为 `0` 时，使用
 `no-execution:<产品>:<项目>` 作为兜底 key，避免不同产品互相覆盖。

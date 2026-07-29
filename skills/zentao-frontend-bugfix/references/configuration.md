@@ -18,8 +18,8 @@
     "type": "zentao-v1",
     "baseUrl": "https://zentao.example.com",
     "tokenEnv": "ZENTAO_TOKEN",
-    "tokenFile": "./.bugfix-secrets/zentao-token",
-    "accountFile": "./.bugfix-secrets/zentao-account"
+    "tokenFile": "./secrets/zentao-token",
+    "accountFile": "./secrets/zentao-account"
   }
 }
 ```
@@ -40,31 +40,29 @@
 `source.tokenEnv` 指定的环境变量读取，默认是 `ZENTAO_TOKEN`；如果环境变量不存在，
 则读取 `source.tokenFile`。
 
-安装后只需在项目目录执行一次：
+首次安装在 One-Click-Repair 项目目录执行：
 
 ```bash
-npm run setup
+npm run bootstrap -- --base-url https://zentao.example.com/zentao
 ```
 
-命令先询问禅道登录账号，再由 macOS 系统钥匙串隐藏询问密码。密码只保存在 macOS
-钥匙串中；账号写入权限为 `0600` 的 `source.accountFile`，短期 Token 写入权限为
-`0600` 的 `source.tokenFile`。两个文件都应位于 Git 忽略的 `.bugfix-secrets/`。
+命令会安装 Skill、生成用户配置、询问禅道登录账号，再由 macOS 系统钥匙串隐藏询问
+密码。密码只保存在 macOS 钥匙串中；账号和短期 Token 文件权限为 `0600`。
 
 初始化时会请求 `POST /api.php/v1/tokens` 验证凭据并生成 Token。以后执行一键禅道时，
 如果接口返回 `401`，程序会自动从钥匙串读取账号密码、重新获取 Token，并将原只读
 拉取任务重试一次。密码不会写入配置、报告、日志或命令参数。
 
-日常使用只运行统一入口：
+执行器会自动查找 `ZENTAO_BUGFIX_CONFIG`、当前目录的 `.bugfix.local.json`，以及
+Codex 用户目录下的 `zentao-frontend-bugfix/config.json`。因此安装完成后 Codex 可以
+在任意工作目录运行：
 
 ```bash
-npm start -- --config /absolute/path/config.json
+node /absolute/path/to/installed-skill/scripts/bugfix.mjs start
 ```
 
-如果项目根目录存在 `.bugfix.local.json`，可以直接运行 `npm start`，无需传配置参数。
-
-没有完成初始化时，`npm start` 会提示先运行 `npm run setup`，不会在 Codex 聊天中
-索取密码。未显式配置路径时，账号和 Token 默认保存到配置文件同目录的
-`.bugfix-secrets/zentao-account` 与 `.bugfix-secrets/zentao-token`。
+没有完成初始化时，执行器会提示运行 `npm run bootstrap`，不会在 Codex 聊天中索取
+密码。
 
 ### Fixture
 
@@ -173,6 +171,14 @@ node scripts/bugfix.mjs doctor --config /absolute/path/config.json
 
 仓库目录必须由用户提供，指向用户已经准备好的当前目录或 worktree。流程不自动搜索，
 也不执行 Git 命令。
+
+Codex 使用内置命令持久化映射：
+
+```bash
+node /absolute/path/to/installed-skill/scripts/bugfix.mjs repository \
+  --key 2640 \
+  --repo /absolute/path/to/current-workspace
+```
 
 ## 修改后复核
 

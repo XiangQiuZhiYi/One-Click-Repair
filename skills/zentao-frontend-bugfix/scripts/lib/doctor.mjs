@@ -51,7 +51,7 @@ export async function inspectConfig(config) {
         : check(
             "error",
             "SOURCE_AUTH",
-            "禅道尚未初始化，请先运行 npm run setup",
+            "禅道尚未初始化，请先在 One-Click-Repair 中运行 npm run bootstrap",
           ),
     );
     checks.push(

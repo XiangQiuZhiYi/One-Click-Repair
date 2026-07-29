@@ -126,7 +126,7 @@ test("尚未初始化时提示先运行 setup", async () => {
       }),
       (error) =>
         error.code === "ZENTAO_SETUP_REQUIRED" &&
-        /npm run setup/.test(error.message),
+        /npm run bootstrap/.test(error.message),
     );
   } finally {
     await rm(directory, { recursive: true, force: true });

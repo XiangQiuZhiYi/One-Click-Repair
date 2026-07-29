@@ -7,9 +7,11 @@ import {
   setupZentaoCredentials,
   withAutomaticTokenRefresh,
 } from "./lib/auth.mjs";
+import { findDefaultConfigPath } from "./lib/config-path.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { inspectConfig } from "./lib/doctor.mjs";
 import { writeTriageReport } from "./lib/report.mjs";
+import { storeRepositoryByExecution } from "./lib/repository-store.mjs";
 import { triageBugs } from "./lib/triage.mjs";
 import { selectCurrentWorkspace } from "./lib/workspace.mjs";
 
@@ -40,11 +42,12 @@ function printHelp() {
   console.log(`禅道前端 Bug 分诊与修复
 
 用法：
-  bugfix.mjs triage --config /absolute/path/config.json
+  bugfix.mjs triage [--config /absolute/path/config.json]
   bugfix.mjs start [--config /absolute/path/config.json]
   bugfix.mjs setup [--config /absolute/path/config.json]
-  bugfix.mjs doctor --config /absolute/path/config.json
-  bugfix.mjs workspace --config /absolute/path/config.json --report /absolute/path/triage.json --bug BUG_ID --confirmed
+  bugfix.mjs doctor [--config /absolute/path/config.json]
+  bugfix.mjs repository [--config /absolute/path/config.json] --key EXECUTION_KEY --repo /absolute/path
+  bugfix.mjs workspace [--config /absolute/path/config.json] --report /absolute/path/triage.json --bug BUG_ID --confirmed
 `);
 }
 
@@ -66,15 +69,13 @@ async function main() {
     };
   }
 
+  const defaultConfigPath = await findDefaultConfigPath(options);
+
   if (command === "triage") {
-    const config = await loadConfig(requireOption(options, "config"));
+    const config = await loadConfig(defaultConfigPath);
     console.log(JSON.stringify(await collectTriage(config), null, 2));
     return;
   }
-
-  const defaultConfigPath = options.config
-    ? path.resolve(options.config)
-    : path.resolve(".bugfix.local.json");
 
   if (command === "setup" || command === "auth") {
     const config = await loadConfig(defaultConfigPath);
@@ -115,15 +116,27 @@ async function main() {
   }
 
   if (command === "doctor") {
-    const config = await loadConfig(requireOption(options, "config"));
+    const config = await loadConfig(defaultConfigPath);
     const result = await inspectConfig(config);
     console.log(JSON.stringify(result, null, 2));
     if (!result.ok) process.exitCode = 2;
     return;
   }
 
+  if (command === "repository") {
+    if (!options.key) throw new Error("缺少参数：--key");
+    if (!options.repo) throw new Error("缺少参数：--repo");
+    const result = await storeRepositoryByExecution(
+      defaultConfigPath,
+      options.key,
+      options.repo,
+    );
+    console.log(JSON.stringify({ ok: true, ...result }, null, 2));
+    return;
+  }
+
   if (command === "workspace") {
-    const config = await loadConfig(requireOption(options, "config"));
+    const config = await loadConfig(defaultConfigPath);
     const reportPath = requireOption(options, "report");
     if (!options.bug) throw new Error("缺少参数：--bug");
     const result = await selectCurrentWorkspace(config, reportPath, options.bug, {

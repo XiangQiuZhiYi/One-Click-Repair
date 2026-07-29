@@ -92,7 +92,7 @@ export async function readStoredAccount(config) {
       // A missing account file means setup has not completed.
     }
   }
-  const error = new Error("尚未初始化禅道账号，请先运行 npm run setup");
+  const error = new Error("尚未初始化禅道账号，请在 One-Click-Repair 中运行 npm run bootstrap");
   error.code = "ZENTAO_SETUP_REQUIRED";
   throw error;
 }
@@ -139,7 +139,7 @@ export async function refreshZentaoTokenFromKeychain(config, options = {}) {
     );
   } catch (cause) {
     if (isZentaoUnauthorized(cause)) {
-      const error = new Error("钥匙串中的禅道账号或密码已失效，请重新运行 npm run setup", {
+      const error = new Error("钥匙串中的禅道账号或密码已失效，请重新运行 npm run bootstrap", {
         cause,
       });
       error.code = "ZENTAO_CREDENTIAL_INVALID";
@@ -193,7 +193,7 @@ export async function ensureZentaoToken(config, options = {}) {
       error.code === "ZENTAO_SETUP_REQUIRED" ||
       error.code === "KEYCHAIN_CREDENTIAL_MISSING"
     ) {
-      const setupError = new Error("禅道尚未初始化，请先在项目目录运行一次 npm run setup", {
+      const setupError = new Error("禅道尚未初始化，请先在 One-Click-Repair 中运行一次 npm run bootstrap", {
         cause: error,
       });
       setupError.code = "ZENTAO_SETUP_REQUIRED";
