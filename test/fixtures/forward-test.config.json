@@ -1,0 +1,23 @@
+{
+  "currentUser": "your-zentao-account",
+  "source": {
+    "type": "fixture",
+    "path": "../../skills/zentao-frontend-bugfix/references/bugs.fixture.json"
+  },
+  "outputDir": "../../.bugfix-output/forward-test",
+  "repositoriesByExecution": {
+    "100": "../.."
+  },
+  "policy": {
+    "closedStatuses": ["closed", "已关闭"],
+    "autoFixCategories": [
+      "STYLE",
+      "COPY",
+      "FORM_VALIDATION",
+      "NULL_GUARD",
+      "API_MAPPING",
+      "BUILD"
+    ],
+    "minAutoFixConfidence": 0.75
+  }
+}

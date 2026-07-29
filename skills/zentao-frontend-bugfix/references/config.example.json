@@ -1,0 +1,27 @@
+{
+  "currentUser": "your-zentao-account",
+  "source": {
+    "type": "fixture",
+    "path": "./bugs.fixture.json"
+  },
+  "outputDir": "../../../.bugfix-output",
+  "repositoriesByExecution": {
+    "100": "/absolute/path/to/example-frontend"
+  },
+  "policy": {
+    "closedStatuses": ["closed", "已关闭"],
+    "autoFixCategories": [
+      "STYLE",
+      "COPY",
+      "FORM_VALIDATION",
+      "NULL_GUARD",
+      "API_MAPPING",
+      "BUILD"
+    ],
+    "minAutoFixConfidence": 0.75,
+    "highRiskKeywords": [
+      "公共组件",
+      "全局状态"
+    ]
+  }
+}

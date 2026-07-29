@@ -1,0 +1,7 @@
+.bugfix-output/
+.bugfix-worktrees/
+.bugfix-secrets/
+.bugfix.local.json
+node_modules/
+*.log
+.env

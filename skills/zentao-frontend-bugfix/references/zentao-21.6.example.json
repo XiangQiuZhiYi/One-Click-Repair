@@ -1,0 +1,34 @@
+{
+  "source": {
+    "type": "zentao-v1",
+    "baseUrl": "https://zentao.example.com",
+    "tokenEnv": "ZENTAO_TOKEN",
+    "tokenFile": "../../../.bugfix-secrets/zentao-token",
+    "accountFile": "../../../.bugfix-secrets/zentao-account",
+    "productPageSize": 100,
+    "maxProductPages": 20,
+    "pageSize": 100,
+    "maxPagesPerProduct": 100,
+    "productConcurrency": 3,
+    "detailConcurrency": 4,
+    "requestTimeoutMs": 15000,
+    "requestRetries": 2,
+    "retryDelayMs": 300
+  },
+  "outputDir": "../../../.bugfix-output",
+  "repositoriesByExecution": {
+    "你的禅道执行ID": "/absolute/path/to/example-frontend"
+  },
+  "policy": {
+    "closedStatuses": ["closed", "已关闭"],
+    "autoFixCategories": [
+      "STYLE",
+      "COPY",
+      "FORM_VALIDATION",
+      "NULL_GUARD",
+      "API_MAPPING",
+      "BUILD"
+    ],
+    "minAutoFixConfidence": 0.75
+  }
+}

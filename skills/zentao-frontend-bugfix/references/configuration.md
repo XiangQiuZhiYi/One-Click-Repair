@@ -1,0 +1,199 @@
+# 配置参考
+
+## 路径规则
+
+- 配置中的相对路径以配置文件所在目录为基准。
+- `repoPath` 推荐使用绝对路径。
+- `outputDir` 保存分诊报告和工作区元数据。
+
+## 数据源
+
+### 禅道开源版 21.6
+
+优先使用内置的 REST API v1 适配器：
+
+```json
+{
+  "source": {
+    "type": "zentao-v1",
+    "baseUrl": "https://zentao.example.com",
+    "tokenEnv": "ZENTAO_TOKEN",
+    "tokenFile": "./.bugfix-secrets/zentao-token",
+    "accountFile": "./.bugfix-secrets/zentao-account"
+  }
+}
+```
+
+`currentUser` 可以省略，首次拉取时通过 `GET /api.php/v1/user` 从 Token 自动识别账号。
+如需固定账号或做离线测试，也可以显式填写。
+
+执行器会依次请求：
+
+1. `GET /api.php/v1/products`
+2. `GET /api.php/v1/products/{productID}/bugs?limit=100&page=1`
+3. 仅对指派给当前账号且未关闭的 Bug 请求 `GET /api.php/v1/bugs/{bugID}`
+
+如果禅道安装在子路径下，`baseUrl` 包含子路径，例如
+`https://example.com/zentao`。如果直接填写以 `/api.php/v1` 结尾的地址也可以。
+
+可用 `source.productIds` 限定产品 ID，避免扫描无关产品。Token 从
+`source.tokenEnv` 指定的环境变量读取，默认是 `ZENTAO_TOKEN`；如果环境变量不存在，
+则读取 `source.tokenFile`。
+
+安装后只需在项目目录执行一次：
+
+```bash
+npm run setup
+```
+
+命令先询问禅道登录账号，再由 macOS 系统钥匙串隐藏询问密码。密码只保存在 macOS
+钥匙串中；账号写入权限为 `0600` 的 `source.accountFile`，短期 Token 写入权限为
+`0600` 的 `source.tokenFile`。两个文件都应位于 Git 忽略的 `.bugfix-secrets/`。
+
+初始化时会请求 `POST /api.php/v1/tokens` 验证凭据并生成 Token。以后执行一键禅道时，
+如果接口返回 `401`，程序会自动从钥匙串读取账号密码、重新获取 Token，并将原只读
+拉取任务重试一次。密码不会写入配置、报告、日志或命令参数。
+
+日常使用只运行统一入口：
+
+```bash
+npm start -- --config /absolute/path/config.json
+```
+
+如果项目根目录存在 `.bugfix.local.json`，可以直接运行 `npm start`，无需传配置参数。
+
+没有完成初始化时，`npm start` 会提示先运行 `npm run setup`，不会在 Codex 聊天中
+索取密码。未显式配置路径时，账号和 Token 默认保存到配置文件同目录的
+`.bugfix-secrets/zentao-account` 与 `.bugfix-secrets/zentao-token`。
+
+### Fixture
+
+用于开发、测试和规则调优：
+
+```json
+{
+  "source": {
+    "type": "fixture",
+    "path": "./bugs.fixture.json"
+  }
+}
+```
+
+### 通用 REST
+
+不同禅道版本的 URL、认证方式和响应结构可能不同，因此通过配置描述：
+
+```json
+{
+  "source": {
+    "type": "rest",
+    "urlTemplate": "{baseUrl}/api/bugs?assignedTo={currentUser}&page={page}&limit={pageSize}",
+    "baseUrl": "https://zentao.example.com",
+    "pageStart": 1,
+    "pageSize": 100,
+    "maxPages": 20,
+    "requestTimeoutMs": 15000,
+    "requestRetries": 2,
+    "retryDelayMs": 300,
+    "headers": {
+      "Authorization": "Bearer ${ZENTAO_TOKEN}"
+    },
+    "responseItemsPath": "data.bugs",
+    "responseTotalPath": "data.total",
+    "fields": {
+      "id": "id",
+      "title": "title",
+      "description": "description",
+      "steps": "steps",
+      "severity": "severity",
+      "priority": "pri",
+      "product": "productName",
+      "project": "projectName",
+      "execution": "execution",
+      "executionName": "executionName",
+      "module": "moduleName",
+      "status": "status",
+      "assignee": "assignedTo",
+      "url": "url",
+      "attachments": "files",
+      "comments": "comments"
+    }
+  }
+}
+```
+
+`${ENV_NAME}` 从环境变量读取。缺失环境变量会立即报错。
+
+当配置了总数时，到达总数后停止翻页；否则当某页数量小于 `pageSize` 时停止。
+达到 `maxPages` 但无法证明已经取完时会报错，避免静默遗漏 Bug。只有明确接受截断时才设置
+`allowTruncatedResults: true`。
+
+如果列表接口不返回完整描述、复现步骤或附件，配置详情补拉：
+
+```json
+{
+  "source": {
+    "detailUrlTemplate": "{baseUrl}/api/bugs/{bugId}",
+    "detailIdPath": "id",
+    "detailResponsePath": "data",
+    "detailConcurrency": 4
+  }
+}
+```
+
+详情对象会覆盖列表项中的同名字段。批量补拉默认最多并发 4 个请求。
+
+## 接入自检
+
+填写配置后先运行：
+
+```bash
+node scripts/bugfix.mjs doctor --config /absolute/path/config.json
+```
+
+自检只检查 Fixture、认证环境变量和仓库目录，不会请求禅道、修改仓库或运行项目脚本。
+
+## 按所属执行保存仓库
+
+使用 Bug 详情中的所属执行 ID 作为稳定 key。用户首次提供目录后，将它写入本地配置：
+
+```json
+{
+  "repositoriesByExecution": {
+    "2640": "/absolute/path/to/current-workspace"
+  }
+}
+```
+
+执行 ID 在同一禅道实例中稳定且唯一；执行名称只用于界面展示。后续 Bug 的
+`execution` 等于 `2640` 时直接复用该目录，不再询问用户。
+
+如果 Bug 没有所属执行或执行 ID 为 `0`，使用
+`no-execution:<产品>:<项目>` 作为避免冲突的兜底 key。
+
+仓库目录必须由用户提供，指向用户已经准备好的当前目录或 worktree。流程不自动搜索，
+也不执行 Git 命令。
+
+## 修改后复核
+
+不要在配置中保存验证命令，也不要执行项目 `package.json` 中的 script、lint、test、
+typecheck 或 build。修改后由 Codex 重新阅读改动文件及其调用链，逐项核对：
+
+- Bug 的实际表现、预期表现和修改是否一一对应；
+- 条件分支、状态流转、空值、类型和异常路径是否自洽；
+- 导入、组件属性、文案及国际化是否与现有代码约定一致；
+- 是否只触碰了与 Bug 直接相关的文件。
+
+这种结果只能称为“代码逻辑复核通过”，不能称为运行时测试或构建通过。
+
+## 分类策略
+
+`policy.autoFixCategories` 是允许自动修复的类型白名单。即使类型在白名单中，
+信息不足、高风险或没有仓库映射仍不会进入自动修复。
+
+进入 `AUTO_FIX` 也只表示进入“可直接修改”预览清单。只有用户看到最终清单并在聊天中
+明确回复 `确认修改` 后，Codex 才能运行 `workspace --confirmed` 并修改代码。
+
+可通过 `policy.highRiskKeywords` 添加团队特有的高风险词。默认风险词始终生效。
+
+`policy.closedStatuses` 用于排除已关闭 Bug；比较时忽略大小写。

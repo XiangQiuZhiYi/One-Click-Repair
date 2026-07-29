@@ -1,0 +1,47 @@
+[
+  {
+    "id": "101",
+    "title": "登录按钮文案拼写错误",
+    "description": "登录页提交按钮当前显示为“登 录录”，应显示为“登录”。",
+    "steps": "打开登录页即可看到按钮文案。",
+    "severity": 3,
+    "priority": 2,
+    "product": "示例产品",
+    "project": "示例前端项目",
+    "execution": 100,
+    "executionName": "示例迭代",
+    "module": "登录",
+    "status": "active",
+    "assignee": "your-zentao-account"
+  },
+  {
+    "id": "102",
+    "title": "用户列表偶发显示异常",
+    "description": "有时候页面不对，请修复。",
+    "steps": "",
+    "severity": 2,
+    "priority": 2,
+    "product": "示例产品",
+    "project": "示例前端项目",
+    "execution": 100,
+    "executionName": "示例迭代",
+    "module": "用户管理",
+    "status": "active",
+    "assignee": "your-zentao-account"
+  },
+  {
+    "id": "103",
+    "title": "调整登录鉴权和权限模型",
+    "description": "需要重新设计登录后的权限模型，并同步修改后端鉴权接口。",
+    "steps": "登录后进入任意受限页面。",
+    "severity": 1,
+    "priority": 1,
+    "product": "示例产品",
+    "project": "示例前端项目",
+    "execution": 100,
+    "executionName": "示例迭代",
+    "module": "权限",
+    "status": "active",
+    "assignee": "your-zentao-account"
+  }
+]
