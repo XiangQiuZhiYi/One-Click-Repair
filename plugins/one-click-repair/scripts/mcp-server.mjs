@@ -17,6 +17,7 @@ import { findDefaultConfigPath } from "../skills/zentao-frontend-bugfix/scripts/
 import { loadConfig } from "../skills/zentao-frontend-bugfix/scripts/lib/config.mjs";
 import { writeTriageReport } from "../skills/zentao-frontend-bugfix/scripts/lib/report.mjs";
 import {
+  findRepository,
   inspectRepository,
   repositoryKeyForProject,
 } from "../skills/zentao-frontend-bugfix/scripts/lib/repository.mjs";
@@ -29,7 +30,7 @@ import { readJson } from "../skills/zentao-frontend-bugfix/scripts/lib/utils.mjs
 import { selectCurrentWorkspace } from "../skills/zentao-frontend-bugfix/scripts/lib/workspace.mjs";
 
 const SERVER_NAME = "one-click-repair";
-const SERVER_VERSION = "0.6.0";
+const SERVER_VERSION = "0.7.1";
 
 const optionalConfigPathSchema = {
   config_path: z
@@ -70,6 +71,18 @@ async function resolveConfig(configPath) {
   };
 }
 
+async function readCurrentReport(config, reportPath) {
+  const expectedReportPath = path.resolve(config.outputDir, "triage.json");
+  const requestedReportPath = path.resolve(reportPath);
+  if (requestedReportPath !== expectedReportPath) {
+    throw new Error(`report_path 必须是本次配置生成的分诊报告：${expectedReportPath}`);
+  }
+  return {
+    reportPath: requestedReportPath,
+    report: await readJson(requestedReportPath),
+  };
+}
+
 async function collectTriage(config) {
   const token = await ensureZentaoToken(config);
   const triage = await withAutomaticTokenRefresh(config, () => triageBugs(config));
@@ -101,7 +114,7 @@ export async function getZentaoAuthStatus(input = {}) {
       baseUrl: config.source.baseUrl,
       message: accountReady
         ? "账号已初始化；Token 缺失或失效时会使用本地钥匙串自动刷新。"
-        : "尚未初始化账号，请在 One-Click-Repair 项目中运行 npm run bootstrap。",
+        : "尚未初始化账号，请运行 npx one-click-repair@latest setup（源码安装可运行 npm run bootstrap）。",
     };
   } catch (error) {
     return {
@@ -141,7 +154,10 @@ export async function getRepositoryByProject(input) {
   const { configPath, config } = await resolveConfig(input.config_path);
   const projectName = String(input.project_name).trim();
   const projectKey = repositoryKeyForProject(projectName);
-  const mapping = config.repositoriesByProject[projectKey];
+  const mapping = findRepository(
+    { repositoryProject: projectName },
+    config.repositoriesByProject,
+  );
   if (!mapping) {
     return {
       found: false,
@@ -152,12 +168,13 @@ export async function getRepositoryByProject(input) {
   }
   const repository = await inspectRepository({
     ...mapping,
-    projectKey,
     projectName,
   });
   return {
     found: true,
-    projectKey,
+    projectKey: repository.projectKey,
+    requestedProjectKey: projectKey,
+    matchType: repository.matchType,
     projectName,
     configPath,
     repository,
@@ -171,14 +188,9 @@ export async function setRepositoryByProject(input) {
   let existingReport;
   let requestedReportPath;
   if (input.report_path) {
-    const expectedReportPath = path.resolve(currentConfig.outputDir, "triage.json");
-    requestedReportPath = path.resolve(input.report_path);
-    if (requestedReportPath !== expectedReportPath) {
-      throw new Error(
-        `report_path 必须是本次配置生成的分诊报告：${expectedReportPath}`,
-      );
-    }
-    existingReport = await readJson(requestedReportPath);
+    const current = await readCurrentReport(currentConfig, input.report_path);
+    requestedReportPath = current.reportPath;
+    existingReport = current.report;
   }
   const stored = await storeRepositoryByProject(
     configPath,
@@ -210,9 +222,71 @@ export async function setRepositoryByProject(input) {
   };
 }
 
+export async function applyBugUserSupplement(input) {
+  const { configPath, config } = await resolveConfig(input.config_path);
+  const { report } = await readCurrentReport(config, input.report_path);
+  const bugId = String(input.bug_id);
+  const item = report.items.find(
+    (candidate) => String(candidate?.bug?.id) === bugId,
+  );
+  if (!item) throw new Error(`分诊报告中找不到 Bug：${bugId}`);
+
+  const hasSupplement =
+    input.repository_project != null ||
+    input.problem_type != null ||
+    input.needs_confirmation != null ||
+    input.note != null;
+  if (!hasSupplement) {
+    throw new Error("至少需要提供一项用户补充信息");
+  }
+
+  const userSupplement = {
+    ...(item.bug.userSupplement ?? {}),
+    ...(input.problem_type != null ? { problemType: input.problem_type } : {}),
+    ...(input.needs_confirmation != null
+      ? { needsConfirmation: input.needs_confirmation }
+      : {}),
+    ...(input.note != null ? { note: String(input.note).trim() } : {}),
+    updatedAt: new Date().toISOString(),
+  };
+  const repositoryProject = String(input.repository_project ?? "").trim();
+  const updatedItems = report.items.map((candidate) => {
+    if (String(candidate?.bug?.id) !== bugId) return candidate;
+    return {
+      ...candidate,
+      bug: {
+        ...candidate.bug,
+        ...(repositoryProject
+          ? {
+              repositoryProject,
+              repositoryProjectSource: "chat",
+              repositoryProjectLabel: "用户补充",
+            }
+          : {}),
+        userSupplement,
+      },
+    };
+  });
+  const items = await retriageExistingItems(config, updatedItems);
+  const written = await writeTriageReport(config, items);
+  const updatedItem = written.report.items.find(
+    (candidate) => String(candidate.bug.id) === bugId,
+  );
+  return {
+    updated: true,
+    source: "chat-supplement",
+    zentaoRequested: false,
+    configPath,
+    reportPath: written.jsonPath,
+    summaryPath: written.markdownPath,
+    stats: written.report.stats,
+    item: updatedItem,
+  };
+}
+
 export async function selectWorkspaceForBug(input) {
   if (input.confirmed !== true) {
-    throw new Error("只有用户明确回复“确认修改”后才能选择修改工作目录");
+    throw new Error("只有用户已用自然语言明确授权修改后，才能选择修改工作目录");
   }
   const { config } = await resolveConfig(input.config_path);
   return selectCurrentWorkspace(config, input.report_path, input.bug_id, {
@@ -228,7 +302,7 @@ export function createOneClickRepairServer() {
     },
     {
       instructions:
-        "先调用 zentao_list_my_bugs 拉取并逐条语义分析 Bug，从评论中的“所属项目：XXX”识别前端项目并按项目映射本地仓库，再向用户展示可直接修改、等待确认、人工处理和仓库待配置清单。用户提供仓库后，调用 repository_set_by_project 时传入本次 report_path，直接使用其 reportRefresh 在本地刷新最终清单；不得仅因保存仓库映射而再次调用 zentao_list_my_bugs。任何 Bug 都不得因工具调用而直接改代码；只有用户在看到最终清单后明确回复“确认修改”，才可调用 workspace_select_for_bug 并由 Codex修改本地代码。不得显示账号、密码或 Token，不操作 Git，不运行目标项目脚本。",
+        "先调用 zentao_list_my_bugs 拉取并逐条语义分析 Bug，从评论、描述和复现步骤中的代码仓库线索识别前端项目，并按项目映射本地仓库，再向用户展示可直接修改、等待确认、人工处理和仓库待配置清单。用户可直接在聊天中纠正仓库、问题类型和确认状态；调用 bug_apply_user_supplement 在本地刷新现有报告，不要求回写禅道，也不重新拉取。用户提供仓库路径后，调用 repository_set_by_project 并传入本次 report_path。修改前仍需用户明确授权，但允许自然语言表达，不要求固定口令；已预览后，用户可在同一消息里补充信息并授权修改。不得显示账号、密码或 Token，不操作 Git，不运行目标项目脚本。",
     },
   );
 
@@ -298,11 +372,11 @@ export function createOneClickRepairServer() {
   server.registerTool(
     "repository_get_by_project",
     {
-      title: "查询所属项目对应的本地仓库",
+      title: "查询代码仓库对应的本地目录",
       description:
-        "按 Bug 评论中的“所属项目：XXX”查询已保存的本地前端仓库目录和当前可用状态。",
+        "按 Bug 中识别或用户补充的代码仓库名称查询本地仓库；精确匹配失败时会在结果唯一的前提下兼容简称。",
       inputSchema: {
-        project_name: z.string().min(1).describe("Bug 评论中备注的所属项目名称"),
+        project_name: z.string().min(1).describe("Bug 中识别或用户补充的代码仓库名称"),
         ...optionalConfigPathSchema,
       },
       annotations: {
@@ -314,18 +388,18 @@ export function createOneClickRepairServer() {
     async (input) =>
       toolResult(
         await getRepositoryByProject(input),
-        `已查询所属项目 ${input.project_name} 的仓库映射。`,
+        `已查询代码仓库 ${input.project_name} 的本地目录映射。`,
       ),
   );
 
   server.registerTool(
     "repository_set_by_project",
     {
-      title: "保存所属项目对应的本地仓库",
+      title: "保存代码仓库对应的本地目录",
       description:
-        "仅在用户提供本地仓库目录后，按 Bug 评论中的所属项目名称验证并持久化该目录；传入现有 report_path 时会在本地重新分诊并返回刷新报告，不访问禅道。",
+        "用户提供本地仓库目录后，按代码仓库名称验证并持久化该目录；传入现有 report_path 时会在本地重新分诊并返回刷新报告，不访问禅道。",
       inputSchema: {
-        project_name: z.string().min(1).describe("Bug 评论中备注的所属项目名称"),
+        project_name: z.string().min(1).describe("代码仓库名称或用户使用的仓库简称"),
         repository_path: z.string().min(1).describe("用户提供的本地仓库绝对路径"),
         report_path: z
           .string()
@@ -345,7 +419,49 @@ export function createOneClickRepairServer() {
     async (input) =>
       toolResult(
         await setRepositoryByProject(input),
-        `已保存所属项目 ${input.project_name} 的仓库映射，并按需在本地刷新分诊报告。`,
+        `已保存代码仓库 ${input.project_name} 的本地目录映射，并按需在本地刷新分诊报告。`,
+      ),
+  );
+
+  server.registerTool(
+    "bug_apply_user_supplement",
+    {
+      title: "应用用户对 Bug 分析的补充",
+      description:
+        "将用户在聊天中补充或纠正的代码仓库、问题类型、是否仍需确认和说明写入本地分诊报告，并立即在本地重新分诊；不要求回写禅道，也不访问禅道。",
+      inputSchema: {
+        bug_id: z.string().min(1).describe("需要补充或纠正的 Bug ID"),
+        report_path: z.string().min(1).describe("本次分诊报告的绝对路径"),
+        repository_project: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("用户补充或纠正的代码仓库名称，可使用已保存仓库的唯一简称"),
+        problem_type: z
+          .enum(["逻辑", "样式", "需求"])
+          .optional()
+          .describe("用户补充或纠正的问题类型"),
+        needs_confirmation: z
+          .boolean()
+          .optional()
+          .describe("用户补充后，该 Bug 是否仍存在会改变实现方向的确认点"),
+        note: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("用户补充的实现要求、确认答案或纠正说明"),
+        ...optionalConfigPathSchema,
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+    },
+    async (input) =>
+      toolResult(
+        await applyBugUserSupplement(input),
+        `已应用 Bug ${input.bug_id} 的聊天补充，并在本地刷新分诊结果。`,
       ),
   );
 
@@ -354,11 +470,11 @@ export function createOneClickRepairServer() {
     {
       title: "确认后选择 Bug 修改目录",
       description:
-        "仅在用户已看到最终清单并明确回复“确认修改”后，校验报告中的 Bug 并返回其本地工作目录；本工具不修改代码。",
+        "在用户已看到预览并用自然语言明确授权修改后，校验报告中的 Bug 并返回其本地工作目录；不要求固定口令，本工具不修改代码。",
       inputSchema: {
         bug_id: z.string().min(1).describe("本次最终清单中的 Bug ID"),
         report_path: z.string().min(1).describe("zentao_list_my_bugs 返回的报告绝对路径"),
-        confirmed: z.literal(true).describe("用户是否已明确回复“确认修改”"),
+        confirmed: z.literal(true).describe("用户是否已用自然语言明确授权修改"),
         ...optionalConfigPathSchema,
       },
       annotations: {

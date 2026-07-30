@@ -5,7 +5,7 @@ import { readJson, slugify, writeJson } from "./utils.mjs";
 
 export async function selectCurrentWorkspace(config, reportPath, bugId, options = {}) {
   if (options.confirmed !== true) {
-    throw new Error("用户尚未明确回复“确认修改”，不能进入代码修改阶段");
+    throw new Error("用户尚未用自然语言明确授权修改，不能进入代码修改阶段");
   }
   const report = await readJson(reportPath);
   const item = report.items.find((candidate) => String(candidate.bug.id) === String(bugId));

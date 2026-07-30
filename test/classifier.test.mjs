@@ -80,10 +80,10 @@ test("没有仓库映射时进入 BLOCKED", () => {
     policy,
   );
   assert.equal(result.decision, "BLOCKED");
-  assert.match(result.questions.join("\n"), /项目“web”/);
+  assert.match(result.questions.join("\n"), /“web”对应哪个当前本地仓库/);
 });
 
-test("评论缺少所属项目标记时提示先补禅道备注", () => {
+test("缺少仓库线索时允许用户直接在聊天中补充", () => {
   const result = classifyBug(
     {
       id: "missing-project",
@@ -97,7 +97,7 @@ test("评论缺少所属项目标记时提示先补禅道备注", () => {
     policy,
   );
   assert.equal(result.decision, "BLOCKED");
-  assert.match(result.questions.join("\n"), /所属项目：XXX/);
+  assert.match(result.questions.join("\n"), /无需先回写禅道/);
 });
 
 test("评论中的明确预期参与分类", () => {
@@ -163,4 +163,27 @@ test("禅道备注标记待确认时不会自动修改", () => {
   );
   assert.equal(result.category, "REQUIREMENT");
   assert.equal(result.decision, "NEED_CONFIRM");
+});
+
+test("聊天补充可以纠正问题类型并解除已回答的确认点", () => {
+  const result = classifyBug(
+    {
+      id: "8",
+      title: "老师姓名显示异常",
+      description: "详情标题当前多显示分隔符，用户已明确只保留实际存在的名称。",
+      steps: "进入课时统计页面查看详情标题。",
+      comments: [{ comment: "<p>状态：待确认</p>" }],
+      userSupplement: {
+        problemType: "逻辑",
+        needsConfirmation: false,
+        note: "英文名为空时不显示分隔符。",
+      },
+      severity: 3,
+    },
+    repository,
+    policy,
+  );
+  assert.equal(result.category, "STATE_LOGIC");
+  assert.equal(result.decision, "AUTO_FIX");
+  assert.match(result.reasons.join("\n"), /用户已在聊天中补充/);
 });

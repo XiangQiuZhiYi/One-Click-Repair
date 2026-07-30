@@ -8,6 +8,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
 import {
+  applyBugUserSupplement,
   createOneClickRepairServer,
   getRepositoryByProject,
   getZentaoAuthStatus,
@@ -34,6 +35,7 @@ test("MCP 服务声明完整的只读拉取和仓库映射工具", async () => {
     assert.deepEqual(
       response.tools.map((tool) => tool.name).sort(),
       [
+        "bug_apply_user_supplement",
         "repository_get_by_project",
         "repository_set_by_project",
         "workspace_select_for_bug",
@@ -44,6 +46,73 @@ test("MCP 服务声明完整的只读拉取和仓库映射工具", async () => {
     );
   } finally {
     await client.close();
+  }
+});
+
+test("用户可在聊天中补充仓库和确认状态并本地刷新报告", async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), "one-click-repair-user-supplement-"),
+  );
+  try {
+    const configFile = path.join(directory, "config.json");
+    const fixtureFile = path.join(directory, "bugs.json");
+    const repositoryPath = path.join(directory, "sisreact");
+    await mkdir(repositoryPath);
+    await writeFile(path.join(repositoryPath, "package.json"), "{}\n");
+    await writeFile(
+      fixtureFile,
+      JSON.stringify([
+        {
+          id: "47636",
+          title: "教师姓名分隔符显示错误",
+          description: "详情标题当前多显示分隔符，预期只显示实际存在的名称。",
+          steps: "进入课时统计页面并打开教师详情。",
+          status: "active",
+          assignee: "me",
+          severity: 3,
+        },
+      ]),
+    );
+    await writeFile(
+      configFile,
+      JSON.stringify({
+        currentUser: "me",
+        source: { type: "fixture", path: "./bugs.json" },
+        outputDir: "./output",
+        repositoriesByProject: {
+          sisreact: repositoryPath,
+        },
+      }),
+    );
+
+    const initial = await listMyZentaoBugs({ config_path: configFile });
+    assert.equal(initial.items[0].triage.decision, "BLOCKED");
+    const updated = await applyBugUserSupplement({
+      config_path: configFile,
+      report_path: initial.reportPath,
+      bug_id: "47636",
+      repository_project: "react",
+      problem_type: "逻辑",
+      needs_confirmation: false,
+      note: "英文名为空时不显示分隔符。",
+    });
+
+    assert.equal(updated.zentaoRequested, false);
+    assert.equal(updated.item.bug.repositoryProject, "react");
+    assert.equal(updated.item.bug.repositoryProjectSource, "chat");
+    assert.equal(updated.item.repository.projectKey, "sisreact");
+    assert.equal(updated.item.repository.matchType, "fuzzy");
+    assert.equal(updated.item.triage.decision, "AUTO_FIX");
+
+    const selected = await selectWorkspaceForBug({
+      config_path: configFile,
+      bug_id: "47636",
+      report_path: initial.reportPath,
+      confirmed: true,
+    });
+    assert.equal(selected.metadata.workspacePath, repositoryPath);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
   }
 });
 

@@ -147,7 +147,7 @@ async function main() {
   }
 
   if (command === "prepare") {
-    throw new Error("prepare 命令已移除：本流程不再创建 Git worktree；请在用户回复“确认修改”后使用 workspace --confirmed");
+    throw new Error("prepare 命令已移除：本流程不再创建 Git worktree；请在用户明确授权修改后使用 workspace --confirmed");
   }
 
   throw new Error(`未知命令：${command}`);

@@ -139,11 +139,11 @@ export async function loadConfig(configPath) {
     repositoriesByProject == null ||
     Array.isArray(repositoriesByProject)
   ) {
-    throw new Error("repositoriesByProject 必须是以评论中的所属项目名称为 key 的对象");
+    throw new Error("repositoriesByProject 必须是以代码仓库名称为 key 的对象");
   }
   const normalizedRepositories = Object.fromEntries(
     Object.entries(repositoriesByProject).map(([projectName, value]) => {
-      assertString(projectName, "repositoriesByProject 的所属项目名称");
+      assertString(projectName, "repositoriesByProject 的代码仓库名称");
       const projectKey = repositoryKeyForProject(projectName);
       const entry = typeof value === "string" ? { repoPath: value } : value;
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) {

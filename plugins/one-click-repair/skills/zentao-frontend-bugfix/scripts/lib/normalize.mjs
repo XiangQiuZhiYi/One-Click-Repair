@@ -43,27 +43,97 @@ function commentText(comment) {
   );
 }
 
-export function extractRepositoryProject(comments = []) {
+const REPOSITORY_LABELS = [
+  "问题代码仓库",
+  "问题仓库",
+  "代码仓库",
+  "所属仓库",
+  "仓库名称",
+  "前端项目",
+  "所属项目",
+  "属于项目",
+];
+
+function extractRepositoryProjectFromText(text) {
+  const labels = REPOSITORY_LABELS.join("|");
+  const match = String(text ?? "").match(
+    new RegExp(`(?:^|\\n|[【\\[])(?:${labels})\\s*[:：]\\s*([^\\r\\n]+)`, "iu"),
+  );
+  if (!match?.[1]) return undefined;
+  const name = match[1]
+    .trim()
+    .replace(/^[`"'“‘]+|[`"'”’]+$/gu, "")
+    .split(/\s*(?:[。；;，,]|【|\[)\s*/u, 1)[0]
+    .trim();
+  if (!name) return undefined;
+  const labelMatch = match[0].match(new RegExp(`(?:${labels})`, "iu"));
+  return {
+    name,
+    label: labelMatch?.[0] || "代码仓库",
+  };
+}
+
+export function extractRepositoryProjectDetails({
+  comments = [],
+  description = "",
+  steps = "",
+  title = "",
+} = {}) {
   const items = Array.isArray(comments) ? comments : [comments];
   for (let index = items.length - 1; index >= 0; index -= 1) {
     const text = commentText(items[index]);
-    const match = text.match(/(?:所属|属于)项目\s*[:：]\s*([^\r\n]+)/iu);
-    if (match?.[1]) {
-      return match[1].trim().replace(/[。；;，,]+$/u, "").trim();
+    const match = extractRepositoryProjectFromText(text);
+    if (match) {
+      return {
+        ...match,
+        source: "comment",
+      };
     }
   }
-  return "";
+
+  for (const [source, text] of [
+    ["description", description],
+    ["steps", steps],
+    ["title", title],
+  ]) {
+    const match = extractRepositoryProjectFromText(text);
+    if (match) {
+      return {
+        ...match,
+        source,
+      };
+    }
+  }
+
+  return {
+    name: "",
+    label: "",
+    source: "",
+  };
+}
+
+export function extractRepositoryProject(comments = []) {
+  return extractRepositoryProjectDetails({ comments }).name;
 }
 
 export function normalizeBug(raw, fields = {}) {
   const mergedFields = { ...DEFAULT_FIELDS, ...fields };
   const id = printableValue(mapped(raw, mergedFields, "id")).trim();
   const comments = mapped(raw, mergedFields, "comments") ?? [];
+  const title = stripHtml(mapped(raw, mergedFields, "title"));
+  const description = stripHtml(mapped(raw, mergedFields, "description"));
+  const steps = stripHtml(mapped(raw, mergedFields, "steps"));
+  const repositoryProject = extractRepositoryProjectDetails({
+    comments,
+    description,
+    steps,
+    title,
+  });
   return {
     id,
-    title: stripHtml(mapped(raw, mergedFields, "title")),
-    description: stripHtml(mapped(raw, mergedFields, "description")),
-    steps: stripHtml(mapped(raw, mergedFields, "steps")),
+    title,
+    description,
+    steps,
     severity: numericOrText(mapped(raw, mergedFields, "severity")),
     priority: numericOrText(mapped(raw, mergedFields, "priority")),
     affectedVersion: printableValue(
@@ -82,7 +152,9 @@ export function normalizeBug(raw, fields = {}) {
     url: printableValue(mapped(raw, mergedFields, "url")).trim(),
     attachments: mapped(raw, mergedFields, "attachments") ?? [],
     comments,
-    repositoryProject: extractRepositoryProject(comments),
+    repositoryProject: repositoryProject.name,
+    repositoryProjectSource: repositoryProject.source,
+    repositoryProjectLabel: repositoryProject.label,
   };
 }
 

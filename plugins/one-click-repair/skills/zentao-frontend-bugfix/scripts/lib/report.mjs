@@ -35,7 +35,8 @@ function bugMarkdown(item) {
 - 产品：${item.bug.product || "未提供"}
 - 禅道项目：${item.bug.project || "未提供"}
 - 所属执行：${item.bug.executionName || "未提供"}（ID：${item.bug.execution || "未提供"}）
-- 所属项目（评论标记）：${item.bug.repositoryProject || "未提供"}
+- 代码仓库线索：${item.bug.repositoryProject || "未提供"}
+- 线索来源：${item.bug.repositoryProjectSource || "未识别"}${item.bug.repositoryProjectLabel ? `（${item.bug.repositoryProjectLabel}）` : ""}
 - 仓库映射 Key：${item.repositoryKey || "未提供"}
 - 模块：${item.bug.module || "未提供"}
 - 状态：${item.bug.status || "未提供"}
@@ -88,14 +89,14 @@ function summaryMarkdown(report) {
       .filter((item) => item.triage.decision === decision)
       .map(
         (item) =>
-          `| ${markdownCell(item.bug.id)} | ${markdownCell(item.bug.title)} | ${markdownCell(item.bug.repositoryProject || "未备注")} | ${markdownCell(item.bug.executionName || item.bug.execution || "未提供")} | ${item.triage.category} | ${markdownCell(item.repository?.name || "未匹配")} | ${item.triage.confidence} |`,
+          `| ${markdownCell(item.bug.id)} | ${markdownCell(item.bug.title)} | ${markdownCell(item.bug.repositoryProject || "未识别")} | ${markdownCell(item.bug.repositoryProjectSource || "-")} | ${markdownCell(item.bug.executionName || item.bug.execution || "未提供")} | ${item.triage.category} | ${markdownCell(item.repository?.name || "未匹配")} | ${item.triage.confidence} |`,
       )
       .join("\n");
     return `## ${DECISION_LABELS[decision]}
 
-| Bug | 标题 | 所属项目 | 所属执行 | 类型 | 仓库 | 置信度 |
-| --- | --- | --- | --- | --- | --- | --- |
-${rows || "| - | 暂无 | - | - | - | - | - |"}`;
+| Bug | 标题 | 代码仓库线索 | 来源 | 所属执行 | 类型 | 仓库 | 置信度 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+${rows || "| - | 暂无 | - | - | - | - | - | - |"}`;
   }).join("\n\n");
   return `# 禅道前端 Bug 分诊报告
 

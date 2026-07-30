@@ -22418,7 +22418,9 @@ async function readStoredAccount(config2) {
     } catch {
     }
   }
-  const error2 = new Error("\u5C1A\u672A\u521D\u59CB\u5316\u7985\u9053\u8D26\u53F7\uFF0C\u8BF7\u5728 One-Click-Repair \u4E2D\u8FD0\u884C npm run bootstrap");
+  const error2 = new Error(
+    "\u5C1A\u672A\u521D\u59CB\u5316\u7985\u9053\u8D26\u53F7\uFF0C\u8BF7\u8FD0\u884C npx one-click-repair@latest setup\uFF08\u6E90\u7801\u5B89\u88C5\u53EF\u8FD0\u884C npm run bootstrap\uFF09"
+  );
   error2.code = "ZENTAO_SETUP_REQUIRED";
   throw error2;
 }
@@ -22462,7 +22464,7 @@ async function refreshZentaoTokenFromKeychain(config2, options = {}) {
     );
   } catch (cause) {
     if (isZentaoUnauthorized(cause)) {
-      const error2 = new Error("\u94A5\u5319\u4E32\u4E2D\u7684\u7985\u9053\u8D26\u53F7\u6216\u5BC6\u7801\u5DF2\u5931\u6548\uFF0C\u8BF7\u91CD\u65B0\u8FD0\u884C npm run bootstrap", {
+      const error2 = new Error("\u94A5\u5319\u4E32\u4E2D\u7684\u7985\u9053\u8D26\u53F7\u6216\u5BC6\u7801\u5DF2\u5931\u6548\uFF0C\u8BF7\u91CD\u65B0\u8FD0\u884C npx one-click-repair@latest setup\uFF08\u6E90\u7801\u5B89\u88C5\u53EF\u8FD0\u884C npm run bootstrap\uFF09", {
         cause
       });
       error2.code = "ZENTAO_CREDENTIAL_INVALID";
@@ -22489,7 +22491,7 @@ async function ensureZentaoToken(config2, options = {}) {
     return await refreshZentaoTokenFromKeychain(config2, options);
   } catch (error2) {
     if (error2.code === "ZENTAO_SETUP_REQUIRED" || error2.code === "KEYCHAIN_CREDENTIAL_MISSING") {
-      const setupError = new Error("\u7985\u9053\u5C1A\u672A\u521D\u59CB\u5316\uFF0C\u8BF7\u5148\u5728 One-Click-Repair \u4E2D\u8FD0\u884C\u4E00\u6B21 npm run bootstrap", {
+      const setupError = new Error("\u7985\u9053\u5C1A\u672A\u521D\u59CB\u5316\uFF0C\u8BF7\u5148\u8FD0\u884C\u4E00\u6B21 npx one-click-repair@latest setup\uFF08\u6E90\u7801\u5B89\u88C5\u53EF\u8FD0\u884C npm run bootstrap\uFF09", {
         cause: error2
       });
       setupError.code = "ZENTAO_SETUP_REQUIRED";
@@ -22536,7 +22538,7 @@ async function findDefaultConfigPath(options = {}) {
     if (await fileExists(absolutePath)) return absolutePath;
   }
   throw new Error(
-    "\u627E\u4E0D\u5230\u7985\u9053\u914D\u7F6E\u3002\u8BF7\u5728 One-Click-Repair \u9879\u76EE\u4E2D\u8FD0\u884C npm run bootstrap"
+    "\u627E\u4E0D\u5230\u7985\u9053\u914D\u7F6E\u3002\u8BF7\u8FD0\u884C npx one-click-repair@latest setup\uFF08\u6E90\u7801\u5B89\u88C5\u53EF\u8FD0\u884C npm run bootstrap\uFF09"
   );
 }
 
@@ -22550,19 +22552,44 @@ import path4 from "node:path";
 function repositoryKeyForProject(projectName) {
   return printableValue(projectName).trim().toLocaleLowerCase();
 }
+function comparableRepositoryName(value) {
+  return repositoryKeyForProject(value).replace(/[^\p{Letter}\p{Number}]+/gu, "");
+}
 function repositoryKeyForBug(bug) {
   return repositoryKeyForProject(bug.repositoryProject);
 }
 function findRepository(bug, repositoriesByProject) {
   const projectKey = repositoryKeyForBug(bug);
   if (!projectKey) return void 0;
-  const mapping = repositoriesByProject?.[projectKey];
-  if (!mapping) return void 0;
+  const entries = Object.entries(repositoriesByProject ?? {});
+  const exact = entries.find(([key]) => repositoryKeyForProject(key) === projectKey);
+  let selected = exact;
+  let matchType = "exact";
+  if (!selected) {
+    const query = comparableRepositoryName(projectKey);
+    const candidates = entries.filter(([key, mapping2]) => {
+      const names = [
+        key,
+        mapping2?.projectName,
+        mapping2?.name,
+        mapping2?.repoPath ? path4.basename(mapping2.repoPath) : ""
+      ].map(comparableRepositoryName).filter((name) => name.length >= 3);
+      return query.length >= 3 && names.some((name) => name === query || name.includes(query) || query.includes(name));
+    });
+    if (candidates.length === 1) {
+      [selected] = candidates;
+      matchType = "fuzzy";
+    }
+  }
+  if (!selected) return void 0;
+  const [matchedKey, mapping] = selected;
   return {
     name: mapping.name,
     repoPath: mapping.repoPath,
-    projectKey,
-    projectName: bug.repositoryProject
+    projectKey: repositoryKeyForProject(matchedKey),
+    projectName: bug.repositoryProject,
+    requestedProjectKey: projectKey,
+    matchType
   };
 }
 async function inspectRepository(repository) {
@@ -22705,11 +22732,11 @@ async function loadConfig(configPath) {
   }
   const repositoriesByProject = raw.repositoriesByProject ?? {};
   if (typeof repositoriesByProject !== "object" || repositoriesByProject == null || Array.isArray(repositoriesByProject)) {
-    throw new Error("repositoriesByProject \u5FC5\u987B\u662F\u4EE5\u8BC4\u8BBA\u4E2D\u7684\u6240\u5C5E\u9879\u76EE\u540D\u79F0\u4E3A key \u7684\u5BF9\u8C61");
+    throw new Error("repositoriesByProject \u5FC5\u987B\u662F\u4EE5\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0\u4E3A key \u7684\u5BF9\u8C61");
   }
   const normalizedRepositories = Object.fromEntries(
     Object.entries(repositoriesByProject).map(([projectName, value]) => {
-      assertString(projectName, "repositoriesByProject \u7684\u6240\u5C5E\u9879\u76EE\u540D\u79F0");
+      assertString(projectName, "repositoriesByProject \u7684\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0");
       const projectKey = repositoryKeyForProject(projectName);
       const entry = typeof value === "string" ? { repoPath: value } : value;
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
@@ -22796,7 +22823,8 @@ function bugMarkdown(item) {
 - \u4EA7\u54C1\uFF1A${item.bug.product || "\u672A\u63D0\u4F9B"}
 - \u7985\u9053\u9879\u76EE\uFF1A${item.bug.project || "\u672A\u63D0\u4F9B"}
 - \u6240\u5C5E\u6267\u884C\uFF1A${item.bug.executionName || "\u672A\u63D0\u4F9B"}\uFF08ID\uFF1A${item.bug.execution || "\u672A\u63D0\u4F9B"}\uFF09
-- \u6240\u5C5E\u9879\u76EE\uFF08\u8BC4\u8BBA\u6807\u8BB0\uFF09\uFF1A${item.bug.repositoryProject || "\u672A\u63D0\u4F9B"}
+- \u4EE3\u7801\u4ED3\u5E93\u7EBF\u7D22\uFF1A${item.bug.repositoryProject || "\u672A\u63D0\u4F9B"}
+- \u7EBF\u7D22\u6765\u6E90\uFF1A${item.bug.repositoryProjectSource || "\u672A\u8BC6\u522B"}${item.bug.repositoryProjectLabel ? `\uFF08${item.bug.repositoryProjectLabel}\uFF09` : ""}
 - \u4ED3\u5E93\u6620\u5C04 Key\uFF1A${item.repositoryKey || "\u672A\u63D0\u4F9B"}
 - \u6A21\u5757\uFF1A${item.bug.module || "\u672A\u63D0\u4F9B"}
 - \u72B6\u6001\uFF1A${item.bug.status || "\u672A\u63D0\u4F9B"}
@@ -22845,13 +22873,13 @@ function summaryMarkdown(report) {
   ).join("\n");
   const groups = DECISIONS.map((decision) => {
     const rows = report.items.filter((item) => item.triage.decision === decision).map(
-      (item) => `| ${markdownCell(item.bug.id)} | ${markdownCell(item.bug.title)} | ${markdownCell(item.bug.repositoryProject || "\u672A\u5907\u6CE8")} | ${markdownCell(item.bug.executionName || item.bug.execution || "\u672A\u63D0\u4F9B")} | ${item.triage.category} | ${markdownCell(item.repository?.name || "\u672A\u5339\u914D")} | ${item.triage.confidence} |`
+      (item) => `| ${markdownCell(item.bug.id)} | ${markdownCell(item.bug.title)} | ${markdownCell(item.bug.repositoryProject || "\u672A\u8BC6\u522B")} | ${markdownCell(item.bug.repositoryProjectSource || "-")} | ${markdownCell(item.bug.executionName || item.bug.execution || "\u672A\u63D0\u4F9B")} | ${item.triage.category} | ${markdownCell(item.repository?.name || "\u672A\u5339\u914D")} | ${item.triage.confidence} |`
     ).join("\n");
     return `## ${DECISION_LABELS[decision]}
 
-| Bug | \u6807\u9898 | \u6240\u5C5E\u9879\u76EE | \u6240\u5C5E\u6267\u884C | \u7C7B\u578B | \u4ED3\u5E93 | \u7F6E\u4FE1\u5EA6 |
-| --- | --- | --- | --- | --- | --- | --- |
-${rows || "| - | \u6682\u65E0 | - | - | - | - | - |"}`;
+| Bug | \u6807\u9898 | \u4EE3\u7801\u4ED3\u5E93\u7EBF\u7D22 | \u6765\u6E90 | \u6240\u5C5E\u6267\u884C | \u7C7B\u578B | \u4ED3\u5E93 | \u7F6E\u4FE1\u5EA6 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+${rows || "| - | \u6682\u65E0 | - | - | - | - | - | - |"}`;
   }).join("\n\n");
   return `# \u7985\u9053\u524D\u7AEF Bug \u5206\u8BCA\u62A5\u544A
 
@@ -22909,7 +22937,7 @@ import path7 from "node:path";
 async function storeRepositoryByProject(configPath, projectName, repoPath) {
   const name = String(projectName || "").trim();
   const key = repositoryKeyForProject(name);
-  if (!key) throw new Error("\u6240\u5C5E\u9879\u76EE\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A");
+  if (!key) throw new Error("\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A");
   const absoluteRepoPath = path7.resolve(repoPath);
   const inspected = await inspectRepository({
     name: path7.basename(absoluteRepoPath),
@@ -23027,6 +23055,19 @@ function detectUserHandling(text) {
   return void 0;
 }
 function detectCategory(bug) {
+  const supplementedType = bug.userSupplement?.problemType;
+  const supplementedCategory = {
+    \u903B\u8F91: "STATE_LOGIC",
+    \u6837\u5F0F: "STYLE",
+    \u9700\u6C42: "REQUIREMENT"
+  }[supplementedType];
+  if (supplementedCategory) {
+    return {
+      category: supplementedCategory,
+      hits: [`\u7528\u6237\u8865\u5145\u7C7B\u578B\uFF1A${supplementedType}`],
+      confidence: 1
+    };
+  }
   const text = contextText(bug);
   let best = { category: "UNKNOWN", hits: [], confidence: 0.35 };
   for (const rule of CATEGORY_RULES) {
@@ -23069,11 +23110,11 @@ function classifyBug(bug, repository, policy) {
   if (!repository) {
     decision = "BLOCKED";
     if (!bug.repositoryProject) {
-      reasons.push("\u7985\u9053\u8BC4\u8BBA\u4E2D\u7F3A\u5C11\u201C\u6240\u5C5E\u9879\u76EE\uFF1AXXX\u201D\u6807\u8BB0");
-      questions.push("\u8BF7\u5148\u5728\u8BE5 Bug \u7684\u7985\u9053\u8BC4\u8BBA\u4E2D\u5907\u6CE8\u201C\u6240\u5C5E\u9879\u76EE\uFF1AXXX\u201D\uFF0C\u7136\u540E\u91CD\u65B0\u6267\u884C\u4E00\u952E\u7985\u9053\u3002");
+      reasons.push("\u7985\u9053\u8BE6\u60C5\u4E2D\u672A\u8BC6\u522B\u5230\u4EE3\u7801\u4ED3\u5E93\u7EBF\u7D22");
+      questions.push("\u8BF7\u76F4\u63A5\u5728\u804A\u5929\u4E2D\u8BF4\u660E\u8BE5 Bug \u5BF9\u5E94\u7684\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0\uFF1B\u65E0\u9700\u5148\u56DE\u5199\u7985\u9053\u3002");
     } else {
-      reasons.push(`\u6240\u5C5E\u9879\u76EE\u201C${bug.repositoryProject}\u201D\u6CA1\u6709\u5339\u914D\u5230\u672C\u5730\u4EE3\u7801\u4ED3\u5E93`);
-      questions.push(`\u9879\u76EE\u201C${bug.repositoryProject}\u201D\u5BF9\u5E94\u54EA\u4E2A\u5F53\u524D\u672C\u5730\u4ED3\u5E93\u7EDD\u5BF9\u8DEF\u5F84\uFF1F`);
+      reasons.push(`\u4EE3\u7801\u4ED3\u5E93\u7EBF\u7D22\u201C${bug.repositoryProject}\u201D\u6CA1\u6709\u5339\u914D\u5230\u672C\u5730\u4ED3\u5E93`);
+      questions.push(`\u201C${bug.repositoryProject}\u201D\u5BF9\u5E94\u54EA\u4E2A\u5F53\u524D\u672C\u5730\u4ED3\u5E93\u7EDD\u5BF9\u8DEF\u5F84\uFF1F\u4E5F\u53EF\u4EE5\u8865\u5145\u66F4\u51C6\u786E\u7684\u4ED3\u5E93\u540D\u79F0\u3002`);
     }
   } else if (repository.available === false) {
     decision = "BLOCKED";
@@ -23089,6 +23130,15 @@ function classifyBug(bug, repository, policy) {
   } else if (typeof bug.severity === "number" && bug.severity <= policy.humanReviewSeverityAtOrBelow) {
     decision = "HUMAN_REQUIRED";
     reasons.push(`\u4E25\u91CD\u7A0B\u5EA6 ${bug.severity} \u8FBE\u5230\u5F3A\u5236\u4EBA\u5DE5\u590D\u6838\u9608\u503C`);
+  } else if (bug.userSupplement?.needsConfirmation === false) {
+    decision = "AUTO_FIX";
+    reasons.push("\u7528\u6237\u5DF2\u5728\u804A\u5929\u4E2D\u8865\u5145\u5173\u952E\u4FE1\u606F\uFF0C\u5E76\u660E\u786E\u8BF4\u660E\u65E0\u9700\u7EE7\u7EED\u786E\u8BA4");
+  } else if (bug.userSupplement?.needsConfirmation === true) {
+    decision = "NEED_CONFIRM";
+    reasons.push("\u7528\u6237\u5728\u804A\u5929\u4E2D\u6807\u8BB0\u4E3A\u4ECD\u9700\u786E\u8BA4");
+    questions.push(
+      bug.userSupplement?.note || "\u8BF7\u786E\u8BA4\u4F1A\u6539\u53D8\u5B9E\u73B0\u65B9\u5411\u7684\u4E1A\u52A1\u89C4\u5219\u6216\u4EA4\u4E92\u9884\u671F\u3002"
+    );
   } else if (userHandling === "NEED_CONFIRM") {
     decision = "NEED_CONFIRM";
     reasons.push("\u7985\u9053\u5907\u6CE8\u5DF2\u6807\u8BB0\u4E3A\u5F85\u786E\u8BA4");
@@ -23127,10 +23177,10 @@ function classifyBug(bug, repository, policy) {
     reasons,
     questions,
     nextAction: {
-      AUTO_FIX: "\u52A0\u5165\u53EF\u76F4\u63A5\u4FEE\u6539\u6E05\u5355\uFF0C\u7B49\u5F85\u7528\u6237\u660E\u786E\u56DE\u590D\u201C\u786E\u8BA4\u4FEE\u6539\u201D",
+      AUTO_FIX: "\u52A0\u5165\u53EF\u76F4\u63A5\u4FEE\u6539\u6E05\u5355\uFF0C\u7B49\u5F85\u7528\u6237\u7528\u81EA\u7136\u8BED\u8A00\u660E\u786E\u6388\u6743\u4FEE\u6539",
       NEED_CONFIRM: "\u83B7\u5F97\u95EE\u9898\u7B54\u6848\u540E\u8865\u5145 Bug \u4FE1\u606F\u5E76\u91CD\u65B0\u5206\u8BCA",
       HUMAN_REQUIRED: "\u7531\u4EBA\u5DE5\u786E\u8BA4\u65B9\u6848\u3001\u5F71\u54CD\u8303\u56F4\u548C\u8D1F\u8D23\u4EBA",
-      BLOCKED: "\u8BE2\u95EE\u8BE5\u9879\u76EE\u5F53\u524D\u4ED3\u5E93\u76EE\u5F55\uFF0C\u4FDD\u5B58\u6620\u5C04\u540E\u91CD\u65B0\u5206\u8BCA"
+      BLOCKED: "\u5141\u8BB8\u7528\u6237\u5728\u804A\u5929\u4E2D\u8865\u5145\u4ED3\u5E93\u540D\u79F0\u6216\u76EE\u5F55\uFF0C\u7136\u540E\u672C\u5730\u91CD\u65B0\u5206\u8BCA"
     }[decision]
   };
 }
@@ -23171,26 +23221,84 @@ function commentText(comment) {
     comment.comment ?? comment.content ?? comment.text ?? comment.desc ?? ""
   );
 }
-function extractRepositoryProject(comments = []) {
+var REPOSITORY_LABELS = [
+  "\u95EE\u9898\u4EE3\u7801\u4ED3\u5E93",
+  "\u95EE\u9898\u4ED3\u5E93",
+  "\u4EE3\u7801\u4ED3\u5E93",
+  "\u6240\u5C5E\u4ED3\u5E93",
+  "\u4ED3\u5E93\u540D\u79F0",
+  "\u524D\u7AEF\u9879\u76EE",
+  "\u6240\u5C5E\u9879\u76EE",
+  "\u5C5E\u4E8E\u9879\u76EE"
+];
+function extractRepositoryProjectFromText(text) {
+  const labels = REPOSITORY_LABELS.join("|");
+  const match = String(text ?? "").match(
+    new RegExp(`(?:^|\\n|[\u3010\\[])(?:${labels})\\s*[:\uFF1A]\\s*([^\\r\\n]+)`, "iu")
+  );
+  if (!match?.[1]) return void 0;
+  const name = match[1].trim().replace(/^[`"'“‘]+|[`"'”’]+$/gu, "").split(/\s*(?:[。；;，,]|【|\[)\s*/u, 1)[0].trim();
+  if (!name) return void 0;
+  const labelMatch = match[0].match(new RegExp(`(?:${labels})`, "iu"));
+  return {
+    name,
+    label: labelMatch?.[0] || "\u4EE3\u7801\u4ED3\u5E93"
+  };
+}
+function extractRepositoryProjectDetails({
+  comments = [],
+  description = "",
+  steps = "",
+  title = ""
+} = {}) {
   const items = Array.isArray(comments) ? comments : [comments];
   for (let index = items.length - 1; index >= 0; index -= 1) {
     const text = commentText(items[index]);
-    const match = text.match(/(?:所属|属于)项目\s*[:：]\s*([^\r\n]+)/iu);
-    if (match?.[1]) {
-      return match[1].trim().replace(/[。；;，,]+$/u, "").trim();
+    const match = extractRepositoryProjectFromText(text);
+    if (match) {
+      return {
+        ...match,
+        source: "comment"
+      };
     }
   }
-  return "";
+  for (const [source, text] of [
+    ["description", description],
+    ["steps", steps],
+    ["title", title]
+  ]) {
+    const match = extractRepositoryProjectFromText(text);
+    if (match) {
+      return {
+        ...match,
+        source
+      };
+    }
+  }
+  return {
+    name: "",
+    label: "",
+    source: ""
+  };
 }
 function normalizeBug(raw, fields = {}) {
   const mergedFields = { ...DEFAULT_FIELDS, ...fields };
   const id = printableValue(mapped(raw, mergedFields, "id")).trim();
   const comments = mapped(raw, mergedFields, "comments") ?? [];
+  const title = stripHtml(mapped(raw, mergedFields, "title"));
+  const description = stripHtml(mapped(raw, mergedFields, "description"));
+  const steps = stripHtml(mapped(raw, mergedFields, "steps"));
+  const repositoryProject = extractRepositoryProjectDetails({
+    comments,
+    description,
+    steps,
+    title
+  });
   return {
     id,
-    title: stripHtml(mapped(raw, mergedFields, "title")),
-    description: stripHtml(mapped(raw, mergedFields, "description")),
-    steps: stripHtml(mapped(raw, mergedFields, "steps")),
+    title,
+    description,
+    steps,
     severity: numericOrText(mapped(raw, mergedFields, "severity")),
     priority: numericOrText(mapped(raw, mergedFields, "priority")),
     affectedVersion: printableValue(
@@ -23209,7 +23317,9 @@ function normalizeBug(raw, fields = {}) {
     url: printableValue(mapped(raw, mergedFields, "url")).trim(),
     attachments: mapped(raw, mergedFields, "attachments") ?? [],
     comments,
-    repositoryProject: extractRepositoryProject(comments)
+    repositoryProject: repositoryProject.name,
+    repositoryProjectSource: repositoryProject.source,
+    repositoryProjectLabel: repositoryProject.label
   };
 }
 function normalizeAndFilterBugs(rawBugs, config2) {
@@ -23273,7 +23383,7 @@ import { constants as constants2 } from "node:fs";
 import path8 from "node:path";
 async function selectCurrentWorkspace(config2, reportPath, bugId, options = {}) {
   if (options.confirmed !== true) {
-    throw new Error("\u7528\u6237\u5C1A\u672A\u660E\u786E\u56DE\u590D\u201C\u786E\u8BA4\u4FEE\u6539\u201D\uFF0C\u4E0D\u80FD\u8FDB\u5165\u4EE3\u7801\u4FEE\u6539\u9636\u6BB5");
+    throw new Error("\u7528\u6237\u5C1A\u672A\u7528\u81EA\u7136\u8BED\u8A00\u660E\u786E\u6388\u6743\u4FEE\u6539\uFF0C\u4E0D\u80FD\u8FDB\u5165\u4EE3\u7801\u4FEE\u6539\u9636\u6BB5");
   }
   const report = await readJson(reportPath);
   const item = report.items.find((candidate) => String(candidate.bug.id) === String(bugId));
@@ -23310,7 +23420,7 @@ async function selectCurrentWorkspace(config2, reportPath, bugId, options = {}) 
 
 // plugins/one-click-repair/scripts/mcp-server.mjs
 var SERVER_NAME = "one-click-repair";
-var SERVER_VERSION = "0.6.0";
+var SERVER_VERSION = "0.7.1";
 var optionalConfigPathSchema = {
   config_path: string2().min(1).optional().describe("\u53EF\u9009\u7684\u7985\u9053\u914D\u7F6E\u7EDD\u5BF9\u8DEF\u5F84\uFF1B\u65E5\u5E38\u4F7F\u7528\u65F6\u4E0D\u8981\u4F20")
 };
@@ -23343,6 +23453,17 @@ async function resolveConfig(configPath) {
     config: await loadConfig(resolvedPath)
   };
 }
+async function readCurrentReport(config2, reportPath) {
+  const expectedReportPath = path9.resolve(config2.outputDir, "triage.json");
+  const requestedReportPath = path9.resolve(reportPath);
+  if (requestedReportPath !== expectedReportPath) {
+    throw new Error(`report_path \u5FC5\u987B\u662F\u672C\u6B21\u914D\u7F6E\u751F\u6210\u7684\u5206\u8BCA\u62A5\u544A\uFF1A${expectedReportPath}`);
+  }
+  return {
+    reportPath: requestedReportPath,
+    report: await readJson(requestedReportPath)
+  };
+}
 async function collectTriage(config2) {
   const token = await ensureZentaoToken(config2);
   const triage = await withAutomaticTokenRefresh(config2, () => triageBugs(config2));
@@ -23369,7 +23490,7 @@ async function getZentaoAuthStatus(input = {}) {
       tokenSource: token.source,
       configPath,
       baseUrl: config2.source.baseUrl,
-      message: accountReady ? "\u8D26\u53F7\u5DF2\u521D\u59CB\u5316\uFF1BToken \u7F3A\u5931\u6216\u5931\u6548\u65F6\u4F1A\u4F7F\u7528\u672C\u5730\u94A5\u5319\u4E32\u81EA\u52A8\u5237\u65B0\u3002" : "\u5C1A\u672A\u521D\u59CB\u5316\u8D26\u53F7\uFF0C\u8BF7\u5728 One-Click-Repair \u9879\u76EE\u4E2D\u8FD0\u884C npm run bootstrap\u3002"
+      message: accountReady ? "\u8D26\u53F7\u5DF2\u521D\u59CB\u5316\uFF1BToken \u7F3A\u5931\u6216\u5931\u6548\u65F6\u4F1A\u4F7F\u7528\u672C\u5730\u94A5\u5319\u4E32\u81EA\u52A8\u5237\u65B0\u3002" : "\u5C1A\u672A\u521D\u59CB\u5316\u8D26\u53F7\uFF0C\u8BF7\u8FD0\u884C npx one-click-repair@latest setup\uFF08\u6E90\u7801\u5B89\u88C5\u53EF\u8FD0\u884C npm run bootstrap\uFF09\u3002"
     };
   } catch (error2) {
     return {
@@ -23406,7 +23527,10 @@ async function getRepositoryByProject(input) {
   const { configPath, config: config2 } = await resolveConfig(input.config_path);
   const projectName = String(input.project_name).trim();
   const projectKey = repositoryKeyForProject(projectName);
-  const mapping = config2.repositoriesByProject[projectKey];
+  const mapping = findRepository(
+    { repositoryProject: projectName },
+    config2.repositoriesByProject
+  );
   if (!mapping) {
     return {
       found: false,
@@ -23417,12 +23541,13 @@ async function getRepositoryByProject(input) {
   }
   const repository = await inspectRepository({
     ...mapping,
-    projectKey,
     projectName
   });
   return {
     found: true,
-    projectKey,
+    projectKey: repository.projectKey,
+    requestedProjectKey: projectKey,
+    matchType: repository.matchType,
     projectName,
     configPath,
     repository
@@ -23435,14 +23560,9 @@ async function setRepositoryByProject(input) {
   let existingReport;
   let requestedReportPath;
   if (input.report_path) {
-    const expectedReportPath = path9.resolve(currentConfig.outputDir, "triage.json");
-    requestedReportPath = path9.resolve(input.report_path);
-    if (requestedReportPath !== expectedReportPath) {
-      throw new Error(
-        `report_path \u5FC5\u987B\u662F\u672C\u6B21\u914D\u7F6E\u751F\u6210\u7684\u5206\u8BCA\u62A5\u544A\uFF1A${expectedReportPath}`
-      );
-    }
-    existingReport = await readJson(requestedReportPath);
+    const current = await readCurrentReport(currentConfig, input.report_path);
+    requestedReportPath = current.reportPath;
+    existingReport = current.report;
   }
   const stored = await storeRepositoryByProject(
     configPath,
@@ -23473,9 +23593,60 @@ async function setRepositoryByProject(input) {
     reportRefresh
   };
 }
+async function applyBugUserSupplement(input) {
+  const { configPath, config: config2 } = await resolveConfig(input.config_path);
+  const { report } = await readCurrentReport(config2, input.report_path);
+  const bugId = String(input.bug_id);
+  const item = report.items.find(
+    (candidate) => String(candidate?.bug?.id) === bugId
+  );
+  if (!item) throw new Error(`\u5206\u8BCA\u62A5\u544A\u4E2D\u627E\u4E0D\u5230 Bug\uFF1A${bugId}`);
+  const hasSupplement = input.repository_project != null || input.problem_type != null || input.needs_confirmation != null || input.note != null;
+  if (!hasSupplement) {
+    throw new Error("\u81F3\u5C11\u9700\u8981\u63D0\u4F9B\u4E00\u9879\u7528\u6237\u8865\u5145\u4FE1\u606F");
+  }
+  const userSupplement = {
+    ...item.bug.userSupplement ?? {},
+    ...input.problem_type != null ? { problemType: input.problem_type } : {},
+    ...input.needs_confirmation != null ? { needsConfirmation: input.needs_confirmation } : {},
+    ...input.note != null ? { note: String(input.note).trim() } : {},
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  const repositoryProject = String(input.repository_project ?? "").trim();
+  const updatedItems = report.items.map((candidate) => {
+    if (String(candidate?.bug?.id) !== bugId) return candidate;
+    return {
+      ...candidate,
+      bug: {
+        ...candidate.bug,
+        ...repositoryProject ? {
+          repositoryProject,
+          repositoryProjectSource: "chat",
+          repositoryProjectLabel: "\u7528\u6237\u8865\u5145"
+        } : {},
+        userSupplement
+      }
+    };
+  });
+  const items = await retriageExistingItems(config2, updatedItems);
+  const written = await writeTriageReport(config2, items);
+  const updatedItem = written.report.items.find(
+    (candidate) => String(candidate.bug.id) === bugId
+  );
+  return {
+    updated: true,
+    source: "chat-supplement",
+    zentaoRequested: false,
+    configPath,
+    reportPath: written.jsonPath,
+    summaryPath: written.markdownPath,
+    stats: written.report.stats,
+    item: updatedItem
+  };
+}
 async function selectWorkspaceForBug(input) {
   if (input.confirmed !== true) {
-    throw new Error("\u53EA\u6709\u7528\u6237\u660E\u786E\u56DE\u590D\u201C\u786E\u8BA4\u4FEE\u6539\u201D\u540E\u624D\u80FD\u9009\u62E9\u4FEE\u6539\u5DE5\u4F5C\u76EE\u5F55");
+    throw new Error("\u53EA\u6709\u7528\u6237\u5DF2\u7528\u81EA\u7136\u8BED\u8A00\u660E\u786E\u6388\u6743\u4FEE\u6539\u540E\uFF0C\u624D\u80FD\u9009\u62E9\u4FEE\u6539\u5DE5\u4F5C\u76EE\u5F55");
   }
   const { config: config2 } = await resolveConfig(input.config_path);
   return selectCurrentWorkspace(config2, input.report_path, input.bug_id, {
@@ -23489,7 +23660,7 @@ function createOneClickRepairServer() {
       version: SERVER_VERSION
     },
     {
-      instructions: "\u5148\u8C03\u7528 zentao_list_my_bugs \u62C9\u53D6\u5E76\u9010\u6761\u8BED\u4E49\u5206\u6790 Bug\uFF0C\u4ECE\u8BC4\u8BBA\u4E2D\u7684\u201C\u6240\u5C5E\u9879\u76EE\uFF1AXXX\u201D\u8BC6\u522B\u524D\u7AEF\u9879\u76EE\u5E76\u6309\u9879\u76EE\u6620\u5C04\u672C\u5730\u4ED3\u5E93\uFF0C\u518D\u5411\u7528\u6237\u5C55\u793A\u53EF\u76F4\u63A5\u4FEE\u6539\u3001\u7B49\u5F85\u786E\u8BA4\u3001\u4EBA\u5DE5\u5904\u7406\u548C\u4ED3\u5E93\u5F85\u914D\u7F6E\u6E05\u5355\u3002\u7528\u6237\u63D0\u4F9B\u4ED3\u5E93\u540E\uFF0C\u8C03\u7528 repository_set_by_project \u65F6\u4F20\u5165\u672C\u6B21 report_path\uFF0C\u76F4\u63A5\u4F7F\u7528\u5176 reportRefresh \u5728\u672C\u5730\u5237\u65B0\u6700\u7EC8\u6E05\u5355\uFF1B\u4E0D\u5F97\u4EC5\u56E0\u4FDD\u5B58\u4ED3\u5E93\u6620\u5C04\u800C\u518D\u6B21\u8C03\u7528 zentao_list_my_bugs\u3002\u4EFB\u4F55 Bug \u90FD\u4E0D\u5F97\u56E0\u5DE5\u5177\u8C03\u7528\u800C\u76F4\u63A5\u6539\u4EE3\u7801\uFF1B\u53EA\u6709\u7528\u6237\u5728\u770B\u5230\u6700\u7EC8\u6E05\u5355\u540E\u660E\u786E\u56DE\u590D\u201C\u786E\u8BA4\u4FEE\u6539\u201D\uFF0C\u624D\u53EF\u8C03\u7528 workspace_select_for_bug \u5E76\u7531 Codex\u4FEE\u6539\u672C\u5730\u4EE3\u7801\u3002\u4E0D\u5F97\u663E\u793A\u8D26\u53F7\u3001\u5BC6\u7801\u6216 Token\uFF0C\u4E0D\u64CD\u4F5C Git\uFF0C\u4E0D\u8FD0\u884C\u76EE\u6807\u9879\u76EE\u811A\u672C\u3002"
+      instructions: "\u5148\u8C03\u7528 zentao_list_my_bugs \u62C9\u53D6\u5E76\u9010\u6761\u8BED\u4E49\u5206\u6790 Bug\uFF0C\u4ECE\u8BC4\u8BBA\u3001\u63CF\u8FF0\u548C\u590D\u73B0\u6B65\u9AA4\u4E2D\u7684\u4EE3\u7801\u4ED3\u5E93\u7EBF\u7D22\u8BC6\u522B\u524D\u7AEF\u9879\u76EE\uFF0C\u5E76\u6309\u9879\u76EE\u6620\u5C04\u672C\u5730\u4ED3\u5E93\uFF0C\u518D\u5411\u7528\u6237\u5C55\u793A\u53EF\u76F4\u63A5\u4FEE\u6539\u3001\u7B49\u5F85\u786E\u8BA4\u3001\u4EBA\u5DE5\u5904\u7406\u548C\u4ED3\u5E93\u5F85\u914D\u7F6E\u6E05\u5355\u3002\u7528\u6237\u53EF\u76F4\u63A5\u5728\u804A\u5929\u4E2D\u7EA0\u6B63\u4ED3\u5E93\u3001\u95EE\u9898\u7C7B\u578B\u548C\u786E\u8BA4\u72B6\u6001\uFF1B\u8C03\u7528 bug_apply_user_supplement \u5728\u672C\u5730\u5237\u65B0\u73B0\u6709\u62A5\u544A\uFF0C\u4E0D\u8981\u6C42\u56DE\u5199\u7985\u9053\uFF0C\u4E5F\u4E0D\u91CD\u65B0\u62C9\u53D6\u3002\u7528\u6237\u63D0\u4F9B\u4ED3\u5E93\u8DEF\u5F84\u540E\uFF0C\u8C03\u7528 repository_set_by_project \u5E76\u4F20\u5165\u672C\u6B21 report_path\u3002\u4FEE\u6539\u524D\u4ECD\u9700\u7528\u6237\u660E\u786E\u6388\u6743\uFF0C\u4F46\u5141\u8BB8\u81EA\u7136\u8BED\u8A00\u8868\u8FBE\uFF0C\u4E0D\u8981\u6C42\u56FA\u5B9A\u53E3\u4EE4\uFF1B\u5DF2\u9884\u89C8\u540E\uFF0C\u7528\u6237\u53EF\u5728\u540C\u4E00\u6D88\u606F\u91CC\u8865\u5145\u4FE1\u606F\u5E76\u6388\u6743\u4FEE\u6539\u3002\u4E0D\u5F97\u663E\u793A\u8D26\u53F7\u3001\u5BC6\u7801\u6216 Token\uFF0C\u4E0D\u64CD\u4F5C Git\uFF0C\u4E0D\u8FD0\u884C\u76EE\u6807\u9879\u76EE\u811A\u672C\u3002"
     }
   );
   server.registerTool(
@@ -23549,10 +23720,10 @@ function createOneClickRepairServer() {
   server.registerTool(
     "repository_get_by_project",
     {
-      title: "\u67E5\u8BE2\u6240\u5C5E\u9879\u76EE\u5BF9\u5E94\u7684\u672C\u5730\u4ED3\u5E93",
-      description: "\u6309 Bug \u8BC4\u8BBA\u4E2D\u7684\u201C\u6240\u5C5E\u9879\u76EE\uFF1AXXX\u201D\u67E5\u8BE2\u5DF2\u4FDD\u5B58\u7684\u672C\u5730\u524D\u7AEF\u4ED3\u5E93\u76EE\u5F55\u548C\u5F53\u524D\u53EF\u7528\u72B6\u6001\u3002",
+      title: "\u67E5\u8BE2\u4EE3\u7801\u4ED3\u5E93\u5BF9\u5E94\u7684\u672C\u5730\u76EE\u5F55",
+      description: "\u6309 Bug \u4E2D\u8BC6\u522B\u6216\u7528\u6237\u8865\u5145\u7684\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0\u67E5\u8BE2\u672C\u5730\u4ED3\u5E93\uFF1B\u7CBE\u786E\u5339\u914D\u5931\u8D25\u65F6\u4F1A\u5728\u7ED3\u679C\u552F\u4E00\u7684\u524D\u63D0\u4E0B\u517C\u5BB9\u7B80\u79F0\u3002",
       inputSchema: {
-        project_name: string2().min(1).describe("Bug \u8BC4\u8BBA\u4E2D\u5907\u6CE8\u7684\u6240\u5C5E\u9879\u76EE\u540D\u79F0"),
+        project_name: string2().min(1).describe("Bug \u4E2D\u8BC6\u522B\u6216\u7528\u6237\u8865\u5145\u7684\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0"),
         ...optionalConfigPathSchema
       },
       annotations: {
@@ -23563,16 +23734,16 @@ function createOneClickRepairServer() {
     },
     async (input) => toolResult(
       await getRepositoryByProject(input),
-      `\u5DF2\u67E5\u8BE2\u6240\u5C5E\u9879\u76EE ${input.project_name} \u7684\u4ED3\u5E93\u6620\u5C04\u3002`
+      `\u5DF2\u67E5\u8BE2\u4EE3\u7801\u4ED3\u5E93 ${input.project_name} \u7684\u672C\u5730\u76EE\u5F55\u6620\u5C04\u3002`
     )
   );
   server.registerTool(
     "repository_set_by_project",
     {
-      title: "\u4FDD\u5B58\u6240\u5C5E\u9879\u76EE\u5BF9\u5E94\u7684\u672C\u5730\u4ED3\u5E93",
-      description: "\u4EC5\u5728\u7528\u6237\u63D0\u4F9B\u672C\u5730\u4ED3\u5E93\u76EE\u5F55\u540E\uFF0C\u6309 Bug \u8BC4\u8BBA\u4E2D\u7684\u6240\u5C5E\u9879\u76EE\u540D\u79F0\u9A8C\u8BC1\u5E76\u6301\u4E45\u5316\u8BE5\u76EE\u5F55\uFF1B\u4F20\u5165\u73B0\u6709 report_path \u65F6\u4F1A\u5728\u672C\u5730\u91CD\u65B0\u5206\u8BCA\u5E76\u8FD4\u56DE\u5237\u65B0\u62A5\u544A\uFF0C\u4E0D\u8BBF\u95EE\u7985\u9053\u3002",
+      title: "\u4FDD\u5B58\u4EE3\u7801\u4ED3\u5E93\u5BF9\u5E94\u7684\u672C\u5730\u76EE\u5F55",
+      description: "\u7528\u6237\u63D0\u4F9B\u672C\u5730\u4ED3\u5E93\u76EE\u5F55\u540E\uFF0C\u6309\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0\u9A8C\u8BC1\u5E76\u6301\u4E45\u5316\u8BE5\u76EE\u5F55\uFF1B\u4F20\u5165\u73B0\u6709 report_path \u65F6\u4F1A\u5728\u672C\u5730\u91CD\u65B0\u5206\u8BCA\u5E76\u8FD4\u56DE\u5237\u65B0\u62A5\u544A\uFF0C\u4E0D\u8BBF\u95EE\u7985\u9053\u3002",
       inputSchema: {
-        project_name: string2().min(1).describe("Bug \u8BC4\u8BBA\u4E2D\u5907\u6CE8\u7684\u6240\u5C5E\u9879\u76EE\u540D\u79F0"),
+        project_name: string2().min(1).describe("\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0\u6216\u7528\u6237\u4F7F\u7528\u7684\u4ED3\u5E93\u7B80\u79F0"),
         repository_path: string2().min(1).describe("\u7528\u6237\u63D0\u4F9B\u7684\u672C\u5730\u4ED3\u5E93\u7EDD\u5BF9\u8DEF\u5F84"),
         report_path: string2().min(1).optional().describe(
           "zentao_list_my_bugs \u8FD4\u56DE\u7684\u62A5\u544A\u7EDD\u5BF9\u8DEF\u5F84\uFF1B\u63D0\u4F9B\u540E\u4EC5\u5728\u672C\u5730\u5237\u65B0\u4ED3\u5E93\u72B6\u6001\u548C\u9884\u5206\u8BCA"
@@ -23587,18 +23758,43 @@ function createOneClickRepairServer() {
     },
     async (input) => toolResult(
       await setRepositoryByProject(input),
-      `\u5DF2\u4FDD\u5B58\u6240\u5C5E\u9879\u76EE ${input.project_name} \u7684\u4ED3\u5E93\u6620\u5C04\uFF0C\u5E76\u6309\u9700\u5728\u672C\u5730\u5237\u65B0\u5206\u8BCA\u62A5\u544A\u3002`
+      `\u5DF2\u4FDD\u5B58\u4EE3\u7801\u4ED3\u5E93 ${input.project_name} \u7684\u672C\u5730\u76EE\u5F55\u6620\u5C04\uFF0C\u5E76\u6309\u9700\u5728\u672C\u5730\u5237\u65B0\u5206\u8BCA\u62A5\u544A\u3002`
+    )
+  );
+  server.registerTool(
+    "bug_apply_user_supplement",
+    {
+      title: "\u5E94\u7528\u7528\u6237\u5BF9 Bug \u5206\u6790\u7684\u8865\u5145",
+      description: "\u5C06\u7528\u6237\u5728\u804A\u5929\u4E2D\u8865\u5145\u6216\u7EA0\u6B63\u7684\u4EE3\u7801\u4ED3\u5E93\u3001\u95EE\u9898\u7C7B\u578B\u3001\u662F\u5426\u4ECD\u9700\u786E\u8BA4\u548C\u8BF4\u660E\u5199\u5165\u672C\u5730\u5206\u8BCA\u62A5\u544A\uFF0C\u5E76\u7ACB\u5373\u5728\u672C\u5730\u91CD\u65B0\u5206\u8BCA\uFF1B\u4E0D\u8981\u6C42\u56DE\u5199\u7985\u9053\uFF0C\u4E5F\u4E0D\u8BBF\u95EE\u7985\u9053\u3002",
+      inputSchema: {
+        bug_id: string2().min(1).describe("\u9700\u8981\u8865\u5145\u6216\u7EA0\u6B63\u7684 Bug ID"),
+        report_path: string2().min(1).describe("\u672C\u6B21\u5206\u8BCA\u62A5\u544A\u7684\u7EDD\u5BF9\u8DEF\u5F84"),
+        repository_project: string2().min(1).optional().describe("\u7528\u6237\u8865\u5145\u6216\u7EA0\u6B63\u7684\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0\uFF0C\u53EF\u4F7F\u7528\u5DF2\u4FDD\u5B58\u4ED3\u5E93\u7684\u552F\u4E00\u7B80\u79F0"),
+        problem_type: _enum(["\u903B\u8F91", "\u6837\u5F0F", "\u9700\u6C42"]).optional().describe("\u7528\u6237\u8865\u5145\u6216\u7EA0\u6B63\u7684\u95EE\u9898\u7C7B\u578B"),
+        needs_confirmation: boolean2().optional().describe("\u7528\u6237\u8865\u5145\u540E\uFF0C\u8BE5 Bug \u662F\u5426\u4ECD\u5B58\u5728\u4F1A\u6539\u53D8\u5B9E\u73B0\u65B9\u5411\u7684\u786E\u8BA4\u70B9"),
+        note: string2().min(1).optional().describe("\u7528\u6237\u8865\u5145\u7684\u5B9E\u73B0\u8981\u6C42\u3001\u786E\u8BA4\u7B54\u6848\u6216\u7EA0\u6B63\u8BF4\u660E"),
+        ...optionalConfigPathSchema
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: false
+      }
+    },
+    async (input) => toolResult(
+      await applyBugUserSupplement(input),
+      `\u5DF2\u5E94\u7528 Bug ${input.bug_id} \u7684\u804A\u5929\u8865\u5145\uFF0C\u5E76\u5728\u672C\u5730\u5237\u65B0\u5206\u8BCA\u7ED3\u679C\u3002`
     )
   );
   server.registerTool(
     "workspace_select_for_bug",
     {
       title: "\u786E\u8BA4\u540E\u9009\u62E9 Bug \u4FEE\u6539\u76EE\u5F55",
-      description: "\u4EC5\u5728\u7528\u6237\u5DF2\u770B\u5230\u6700\u7EC8\u6E05\u5355\u5E76\u660E\u786E\u56DE\u590D\u201C\u786E\u8BA4\u4FEE\u6539\u201D\u540E\uFF0C\u6821\u9A8C\u62A5\u544A\u4E2D\u7684 Bug \u5E76\u8FD4\u56DE\u5176\u672C\u5730\u5DE5\u4F5C\u76EE\u5F55\uFF1B\u672C\u5DE5\u5177\u4E0D\u4FEE\u6539\u4EE3\u7801\u3002",
+      description: "\u5728\u7528\u6237\u5DF2\u770B\u5230\u9884\u89C8\u5E76\u7528\u81EA\u7136\u8BED\u8A00\u660E\u786E\u6388\u6743\u4FEE\u6539\u540E\uFF0C\u6821\u9A8C\u62A5\u544A\u4E2D\u7684 Bug \u5E76\u8FD4\u56DE\u5176\u672C\u5730\u5DE5\u4F5C\u76EE\u5F55\uFF1B\u4E0D\u8981\u6C42\u56FA\u5B9A\u53E3\u4EE4\uFF0C\u672C\u5DE5\u5177\u4E0D\u4FEE\u6539\u4EE3\u7801\u3002",
       inputSchema: {
         bug_id: string2().min(1).describe("\u672C\u6B21\u6700\u7EC8\u6E05\u5355\u4E2D\u7684 Bug ID"),
         report_path: string2().min(1).describe("zentao_list_my_bugs \u8FD4\u56DE\u7684\u62A5\u544A\u7EDD\u5BF9\u8DEF\u5F84"),
-        confirmed: literal(true).describe("\u7528\u6237\u662F\u5426\u5DF2\u660E\u786E\u56DE\u590D\u201C\u786E\u8BA4\u4FEE\u6539\u201D"),
+        confirmed: literal(true).describe("\u7528\u6237\u662F\u5426\u5DF2\u7528\u81EA\u7136\u8BED\u8A00\u660E\u786E\u6388\u6743\u4FEE\u6539"),
         ...optionalConfigPathSchema
       },
       annotations: {
@@ -23627,6 +23823,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 export {
+  applyBugUserSupplement,
   createOneClickRepairServer,
   getRepositoryByProject,
   getZentaoAuthStatus,

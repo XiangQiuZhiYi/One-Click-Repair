@@ -47,7 +47,7 @@ test("确认修改后直接选择用户当前仓库且不配置项目脚本验�
     };
     await assert.rejects(
       selectCurrentWorkspace(config, reportPath, "201"),
-      /确认修改/,
+      /明确授权修改/,
     );
     const prepared = await selectCurrentWorkspace(config, reportPath, "201", { confirmed: true });
     assert.equal(prepared.metadata.workspaceMode, "current");

@@ -164,11 +164,33 @@ export async function installLocalPlugin(options = {}) {
         cwd: repositoryRoot,
       }));
 
-  const listed = await execute(["plugin", "marketplace", "list"]);
+  const listed = await execute(["plugin", "marketplace", "list", "--json"]);
   const marketplaceOutput = String(listed.stdout || listed);
+  let marketplaces;
+  try {
+    marketplaces = JSON.parse(marketplaceOutput).marketplaces ?? [];
+  } catch {
+    throw new Error("无法解析 Codex Marketplace 列表，请升级 Codex 后重试");
+  }
+  const configuredMarketplace = marketplaces.find(
+    (marketplace) => marketplace.name === MARKETPLACE_NAME,
+  );
   let marketplaceAdded = false;
+  let marketplaceReplaced = false;
+  let previousMarketplaceRoot;
 
-  if (!marketplaceOutput.includes(repositoryRoot)) {
+  if (
+    configuredMarketplace &&
+    path.resolve(configuredMarketplace.root) !== repositoryRoot
+  ) {
+    previousMarketplaceRoot = configuredMarketplace.root;
+    await execute(["plugin", "marketplace", "remove", MARKETPLACE_NAME]);
+    marketplaceReplaced = true;
+  }
+  if (
+    !configuredMarketplace ||
+    marketplaceReplaced
+  ) {
     await execute(["plugin", "marketplace", "add", repositoryRoot]);
     marketplaceAdded = true;
   }
@@ -180,5 +202,7 @@ export async function installLocalPlugin(options = {}) {
     pluginName: PLUGIN_NAME,
     pluginSpec: PLUGIN_SPEC,
     marketplaceAdded,
+    marketplaceReplaced,
+    previousMarketplaceRoot,
   };
 }

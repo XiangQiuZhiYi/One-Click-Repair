@@ -40,11 +40,13 @@
 `source.tokenEnv` 指定的环境变量读取，默认是 `ZENTAO_TOKEN`；如果环境变量不存在，
 则读取 `source.tokenFile`。
 
-首次安装在 One-Click-Repair 项目目录执行：
+推荐通过 npm 一键安装：
 
 ```bash
-npm run bootstrap -- --base-url https://zentao.example.com/zentao
+npx one-click-repair@latest setup --base-url https://zentao.example.com/zentao
 ```
+
+从源码安装时可运行 `npm run bootstrap -- --base-url ...`。
 
 命令会安装或更新 One-Click-Repair Plugin、生成用户配置、询问禅道登录账号，再由
 macOS 系统钥匙串隐藏询问密码。密码只保存在 macOS 钥匙串中；账号和短期 Token
@@ -63,8 +65,8 @@ MCP Server 会自动查找 `ZENTAO_BUGFIX_CONFIG`、当前目录的
 npm run start
 ```
 
-没有完成初始化时，执行器会提示运行 `npm run bootstrap`，不会在 Codex 聊天中索取
-密码。
+没有完成初始化时，执行器会提示运行 `npx one-click-repair@latest setup`（源码安装
+可运行 `npm run bootstrap`），不会在 Codex 聊天中索取密码。
 
 ### Fixture
 
@@ -155,16 +157,18 @@ npm run bugfix -- doctor --config /absolute/path/config.json
 
 自检只检查 Fixture、认证环境变量和仓库目录，不会请求禅道、修改仓库或运行项目脚本。
 
-## 按评论中的所属项目保存仓库
+## 按代码仓库线索保存仓库
 
-用户查看或创建 Bug 时，在评论中添加：
+推荐在 Bug 描述或评论中添加：
 
 ```text
-所属项目：sisreact
+问题代码仓库：sisreact
 ```
 
-拉取后使用该项目名作为稳定 key。兼容旧写法 `属于项目：sisreact`，多个标记存在时
-以最新评论为准。用户首次提供目录后，将它写入本地配置：
+也兼容 `问题仓库`、`代码仓库`、`所属仓库`、`仓库名称`、`前端项目`、
+`所属项目` 和 `属于项目`。识别优先级为最新评论、描述、复现步骤、标题，用户在聊天
+中的纠正优先级最高。拉取后使用仓库名作为稳定 key。用户首次提供目录后，将它写入
+本地配置：
 
 ```json
 {
@@ -174,17 +178,20 @@ npm run bugfix -- doctor --config /absolute/path/config.json
 }
 ```
 
-项目名比较时忽略大小写。后续评论标记同一项目时直接复用该目录，不再询问用户。
+仓库名比较时忽略大小写。精确匹配失败时，仅当简称对应唯一已保存仓库才自动复用，
+例如只有 `sisreact` 时可用 `react` 指代；存在多个候选则询问用户。后续识别到同一
+仓库时直接复用目录。
 禅道所属执行只用于展示，不能作为仓库映射依据；同一执行下可能同时包含多个前端
 项目，例如 `sisreact` 和 `sisvue`。
 
 仓库目录必须由用户提供，指向用户已经准备好的当前目录或 worktree。流程不自动搜索，
 也不执行 Git 命令。
 
-评论缺少 `所属项目：XXX` 时，先提示用户在禅道补充备注并重新拉取，不能从标题、
-所属执行、禅道项目字段或本地目录猜测。
+未识别到代码仓库时，用户可直接在聊天中补充，无需先修改禅道或重新拉取。Codex 调用
+`bug_apply_user_supplement` 将仓库、问题类型、确认答案或是否仍需确认写入当前本地
+报告并立即重新分诊。
 
-Codex 使用 MCP 工具 `repository_set_by_project` 持久化映射，传入评论中的项目名和
+Codex 使用 MCP 工具 `repository_set_by_project` 持久化映射，传入识别或补充的仓库名和
 用户明确提供的仓库绝对路径，同时传入首次拉取返回的 `reportPath`。工具会读取现有
 报告，在本地重新检查仓库并更新预分诊结果；该过程不请求禅道。Codex 直接使用返回的
 `reportRefresh.items` 生成最终清单，不因保存映射而重新调用
@@ -207,8 +214,9 @@ typecheck 或 build。修改后由 Codex 重新阅读改动文件及其调用链
 `policy.autoFixCategories` 是允许自动修复的类型白名单。即使类型在白名单中，
 信息不足、高风险或没有仓库映射仍不会进入自动修复。
 
-进入 `AUTO_FIX` 也只表示进入“可直接修改”预览清单。只有用户看到最终清单并在聊天中
-明确回复 `确认修改` 后，Codex 才能调用 `workspace_select_for_bug` 并修改代码。
+进入 `AUTO_FIX` 也只表示进入“可直接修改”预览清单。只有用户看到预览并在聊天中
+用自然语言明确授权修改后，Codex 才能调用 `workspace_select_for_bug`。授权不要求
+固定口令；用户在同一消息中补充信息并授权时，若修改范围未扩大，无需二次确认。
 
 可通过 `policy.highRiskKeywords` 添加团队特有的高风险词。默认风险词始终生效。
 

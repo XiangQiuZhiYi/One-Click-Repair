@@ -17,7 +17,7 @@
   },
   "outputDir": "../../../.bugfix-output",
   "repositoriesByProject": {
-    "评论中的所属项目名": "/absolute/path/to/example-frontend"
+    "代码仓库名称": "/absolute/path/to/example-frontend"
   },
   "policy": {
     "closedStatuses": ["closed", "已关闭"],

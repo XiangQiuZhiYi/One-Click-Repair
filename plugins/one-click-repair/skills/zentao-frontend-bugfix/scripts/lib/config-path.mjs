@@ -30,6 +30,6 @@ export async function findDefaultConfigPath(options = {}) {
     if (await fileExists(absolutePath)) return absolutePath;
   }
   throw new Error(
-    "找不到禅道配置。请在 One-Click-Repair 项目中运行 npm run bootstrap",
+    "找不到禅道配置。请运行 npx one-click-repair@latest setup（源码安装可运行 npm run bootstrap）",
   );
 }

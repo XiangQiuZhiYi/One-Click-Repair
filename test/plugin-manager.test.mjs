@@ -97,12 +97,18 @@ test("首次安装时先添加本地 Marketplace 再安装 Plugin", async () => 
     repositoryRoot,
     execute: async (args) => {
       calls.push(args);
-      return { stdout: "MARKETPLACE ROOT\nopenai-bundled /tmp/bundled" };
+      return {
+        stdout: JSON.stringify({
+          marketplaces: [
+            { name: "openai-bundled", root: "/tmp/bundled" },
+          ],
+        }),
+      };
     },
   });
 
   assert.deepEqual(calls, [
-    ["plugin", "marketplace", "list"],
+    ["plugin", "marketplace", "list", "--json"],
     ["plugin", "marketplace", "add", repositoryRoot],
     ["plugin", "add", PLUGIN_SPEC],
   ]);
@@ -117,14 +123,48 @@ test("Marketplace 已存在时直接安装或更新 Plugin", async () => {
     execute: async (args) => {
       calls.push(args);
       return {
-        stdout: `MARKETPLACE ROOT\none-click-repair ${repositoryRoot}`,
+        stdout: JSON.stringify({
+          marketplaces: [
+            { name: "one-click-repair", root: repositoryRoot },
+          ],
+        }),
       };
     },
   });
 
   assert.deepEqual(calls, [
-    ["plugin", "marketplace", "list"],
+    ["plugin", "marketplace", "list", "--json"],
     ["plugin", "add", PLUGIN_SPEC],
   ]);
   assert.equal(result.marketplaceAdded, false);
+});
+
+test("npm 稳定目录接管已有的源码 Marketplace", async () => {
+  const calls = [];
+  const repositoryRoot =
+    "/Users/new-user/.codex/one-click-repair/marketplace";
+  const previousRoot = "/workspace/One-Click-Repair";
+  const result = await installLocalPlugin({
+    repositoryRoot,
+    execute: async (args) => {
+      calls.push(args);
+      return {
+        stdout: JSON.stringify({
+          marketplaces: [
+            { name: "one-click-repair", root: previousRoot },
+          ],
+        }),
+      };
+    },
+  });
+
+  assert.deepEqual(calls, [
+    ["plugin", "marketplace", "list", "--json"],
+    ["plugin", "marketplace", "remove", "one-click-repair"],
+    ["plugin", "marketplace", "add", repositoryRoot],
+    ["plugin", "add", PLUGIN_SPEC],
+  ]);
+  assert.equal(result.marketplaceAdded, true);
+  assert.equal(result.marketplaceReplaced, true);
+  assert.equal(result.previousMarketplaceRoot, previousRoot);
 });

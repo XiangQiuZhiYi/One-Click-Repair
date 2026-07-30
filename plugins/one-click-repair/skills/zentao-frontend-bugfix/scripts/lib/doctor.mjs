@@ -51,7 +51,7 @@ export async function inspectConfig(config) {
         : check(
             "error",
             "SOURCE_AUTH",
-            "禅道尚未初始化，请先在 One-Click-Repair 中运行 npm run bootstrap",
+            "禅道尚未初始化，请先运行 npx one-click-repair@latest setup（源码安装可运行 npm run bootstrap）",
           ),
     );
     checks.push(
@@ -77,13 +77,13 @@ export async function inspectConfig(config) {
 
   const repositoryEntries = Object.entries(config.repositoriesByProject ?? {});
   if (repositoryEntries.length === 0) {
-    checks.push(check("error", "REPOSITORY_MAPPING", "尚未按所属项目配置当前仓库目录"));
+    checks.push(check("error", "REPOSITORY_MAPPING", "尚未按代码仓库名称配置当前仓库目录"));
   } else {
     for (const [projectKey, mapping] of repositoryEntries) {
       const repository = await inspectRepository(mapping);
       checks.push(
         repository.available
-          ? check("ok", "REPOSITORY", `所属项目 ${mapping.projectName || projectKey} 的当前仓库目录可用`, {
+          ? check("ok", "REPOSITORY", `代码仓库 ${mapping.projectName || projectKey} 的当前目录可用`, {
               projectKey,
               projectName: mapping.projectName || projectKey,
               name: mapping.name,

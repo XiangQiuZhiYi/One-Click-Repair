@@ -7,7 +7,7 @@ import { readJson, writeJson } from "./utils.mjs";
 export async function storeRepositoryByProject(configPath, projectName, repoPath) {
   const name = String(projectName || "").trim();
   const key = repositoryKeyForProject(name);
-  if (!key) throw new Error("所属项目名称不能为空");
+  if (!key) throw new Error("代码仓库名称不能为空");
 
   const absoluteRepoPath = path.resolve(repoPath);
   const inspected = await inspectRepository({

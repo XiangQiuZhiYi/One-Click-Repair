@@ -95,6 +95,19 @@ function detectUserHandling(text) {
 }
 
 export function detectCategory(bug) {
+  const supplementedType = bug.userSupplement?.problemType;
+  const supplementedCategory = {
+    逻辑: "STATE_LOGIC",
+    样式: "STYLE",
+    需求: "REQUIREMENT",
+  }[supplementedType];
+  if (supplementedCategory) {
+    return {
+      category: supplementedCategory,
+      hits: [`用户补充类型：${supplementedType}`],
+      confidence: 1,
+    };
+  }
   const text = contextText(bug);
   let best = { category: "UNKNOWN", hits: [], confidence: 0.35 };
 
@@ -141,11 +154,11 @@ export function classifyBug(bug, repository, policy) {
   if (!repository) {
     decision = "BLOCKED";
     if (!bug.repositoryProject) {
-      reasons.push("禅道评论中缺少“所属项目：XXX”标记");
-      questions.push("请先在该 Bug 的禅道评论中备注“所属项目：XXX”，然后重新执行一键禅道。");
+      reasons.push("禅道详情中未识别到代码仓库线索");
+      questions.push("请直接在聊天中说明该 Bug 对应的代码仓库名称；无需先回写禅道。");
     } else {
-      reasons.push(`所属项目“${bug.repositoryProject}”没有匹配到本地代码仓库`);
-      questions.push(`项目“${bug.repositoryProject}”对应哪个当前本地仓库绝对路径？`);
+      reasons.push(`代码仓库线索“${bug.repositoryProject}”没有匹配到本地仓库`);
+      questions.push(`“${bug.repositoryProject}”对应哪个当前本地仓库绝对路径？也可以补充更准确的仓库名称。`);
     }
   } else if (repository.available === false) {
     decision = "BLOCKED";
@@ -164,6 +177,15 @@ export function classifyBug(bug, repository, policy) {
   ) {
     decision = "HUMAN_REQUIRED";
     reasons.push(`严重程度 ${bug.severity} 达到强制人工复核阈值`);
+  } else if (bug.userSupplement?.needsConfirmation === false) {
+    decision = "AUTO_FIX";
+    reasons.push("用户已在聊天中补充关键信息，并明确说明无需继续确认");
+  } else if (bug.userSupplement?.needsConfirmation === true) {
+    decision = "NEED_CONFIRM";
+    reasons.push("用户在聊天中标记为仍需确认");
+    questions.push(
+      bug.userSupplement?.note || "请确认会改变实现方向的业务规则或交互预期。",
+    );
   } else if (userHandling === "NEED_CONFIRM") {
     decision = "NEED_CONFIRM";
     reasons.push("禅道备注已标记为待确认");
@@ -203,10 +225,10 @@ export function classifyBug(bug, repository, policy) {
     reasons,
     questions,
     nextAction: {
-      AUTO_FIX: "加入可直接修改清单，等待用户明确回复“确认修改”",
+      AUTO_FIX: "加入可直接修改清单，等待用户用自然语言明确授权修改",
       NEED_CONFIRM: "获得问题答案后补充 Bug 信息并重新分诊",
       HUMAN_REQUIRED: "由人工确认方案、影响范围和负责人",
-      BLOCKED: "询问该项目当前仓库目录，保存映射后重新分诊",
+      BLOCKED: "允许用户在聊天中补充仓库名称或目录，然后本地重新分诊",
     }[decision],
   };
 }

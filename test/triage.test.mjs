@@ -4,7 +4,11 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { loadConfig } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/config.mjs";
-import { extractRepositoryProject } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/normalize.mjs";
+import {
+  extractRepositoryProject,
+  normalizeBug,
+} from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/normalize.mjs";
+import { findRepository } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/repository.mjs";
 import { writeTriageReport } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/report.mjs";
 import { triageBugs } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/triage.mjs";
 
@@ -16,6 +20,50 @@ test("所属项目解析兼容旧写法并以最新评论为准", () => {
     ]),
     "sisreact",
   );
+});
+
+test("从问题描述中的问题代码仓库字段识别仓库", () => {
+  const bug = normalizeBug({
+    id: "47636",
+    title: "教师姓名显示分隔符",
+    description:
+      "当前结果与期望结果不一致。\n问题代码仓库：sisreact\n代码分析：详情标题模板需要调整。",
+    steps: "进入课时统计页面查看教师详情。",
+  });
+  assert.equal(bug.repositoryProject, "sisreact");
+  assert.equal(bug.repositoryProjectSource, "description");
+  assert.equal(bug.repositoryProjectLabel, "问题代码仓库");
+});
+
+test("评论中的仓库字段优先于描述中的仓库字段", () => {
+  const bug = normalizeBug({
+    id: "47637",
+    description: "问题代码仓库：sisvue",
+    comments: [{ comment: "<p>代码仓库：sisreact</p>" }],
+  });
+  assert.equal(bug.repositoryProject, "sisreact");
+  assert.equal(bug.repositoryProjectSource, "comment");
+});
+
+test("仓库简称只有唯一匹配时才自动复用", () => {
+  const unique = findRepository(
+    { repositoryProject: "react" },
+    {
+      sisreact: { name: "sisreact", repoPath: "/workspace/sisreact" },
+      sisvue: { name: "sisvue", repoPath: "/workspace/sisvue" },
+    },
+  );
+  assert.equal(unique.projectKey, "sisreact");
+  assert.equal(unique.matchType, "fuzzy");
+
+  const ambiguous = findRepository(
+    { repositoryProject: "react" },
+    {
+      sisreact: { name: "sisreact", repoPath: "/workspace/sisreact" },
+      adminreact: { name: "adminreact", repoPath: "/workspace/adminreact" },
+    },
+  );
+  assert.equal(ambiguous, undefined);
 });
 
 test("离线数据可以完成跨结论分诊并生成报告", async () => {
@@ -165,7 +213,7 @@ test("同一所属执行下根据评论中的不同项目选择不同仓库", as
   }
 });
 
-test("缺少所属项目评论时不会回退到所属执行仓库", async () => {
+test("缺少代码仓库线索时不会回退到所属执行仓库", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "bugfix-project-required-"));
   try {
     const fixturePath = path.join(directory, "bugs.json");
@@ -200,7 +248,7 @@ test("缺少所属项目评论时不会回退到所属执行仓库", async () =>
     assert.equal(item.repositoryKey, "");
     assert.equal(item.repository, undefined);
     assert.equal(item.triage.decision, "BLOCKED");
-    assert.match(item.triage.questions.join("\n"), /所属项目：XXX/);
+    assert.match(item.triage.questions.join("\n"), /直接在聊天中说明/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
