@@ -3,9 +3,9 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { inspectConfig } from "../skills/zentao-frontend-bugfix/scripts/lib/doctor.mjs";
+import { inspectConfig } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/doctor.mjs";
 
-test("接入自检识别按所属执行保存的可用仓库", async () => {
+test("接入自检识别按所属项目保存的可用仓库", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "bugfix-doctor-"));
   try {
     const repoPath = path.join(directory, "repo");
@@ -18,10 +18,11 @@ test("接入自检识别按所属执行保存的可用仓库", async () => {
       currentUser: "me",
       __configPath: path.join(directory, "config.json"),
       source: { type: "fixture", path: fixturePath },
-      repositoriesByExecution: {
-        "100": {
+      repositoriesByProject: {
+        sisreact: {
           name: "web",
           repoPath,
+          projectName: "sisreact",
         },
       },
     });
@@ -29,7 +30,7 @@ test("接入自检识别按所属执行保存的可用仓库", async () => {
     assert.equal(result.ok, true);
     assert.ok(result.checks.some((item) => item.code === "SOURCE_FIXTURE" && item.level === "ok"));
     assert.ok(result.checks.some((item) => item.code === "REPOSITORY" && item.level === "ok"));
-    assert.ok(result.checks.some((item) => item.executionKey === "100"));
+    assert.ok(result.checks.some((item) => item.projectKey === "sisreact"));
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
@@ -47,7 +48,7 @@ test("接入自检不会请求 REST，但会发现缺少认证环境变量", asy
         baseUrl: "https://zentao.example.com",
         headers: { Authorization: "Bearer ${DOCTOR_MISSING_TOKEN}" },
       },
-      repositoriesByExecution: {},
+      repositoriesByProject: {},
     });
     assert.equal(result.ok, false);
     assert.ok(result.checks.some((item) => item.code === "SOURCE_AUTH" && item.level === "error"));
@@ -68,7 +69,7 @@ test("禅道 21.6 自检检查 Token 环境变量但不发送请求", async () =
         baseUrl: "https://zentao.example.com",
         tokenEnv: "DOCTOR_ZENTAO_V1_TOKEN",
       },
-      repositoriesByExecution: {},
+      repositoriesByProject: {},
     });
     assert.ok(
       result.checks.some((item) => item.code === "SOURCE_ZENTAO_V1" && item.level === "ok"),
@@ -98,7 +99,7 @@ test("禅道账号已初始化时允许后续从钥匙串刷新 Token", async ()
         tokenFile: path.join(directory, "missing-token"),
         accountFile,
       },
-      repositoriesByExecution: {},
+      repositoriesByProject: {},
     });
 
     assert.ok(

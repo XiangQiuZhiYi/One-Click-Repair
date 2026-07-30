@@ -16,8 +16,8 @@
     "retryDelayMs": 300
   },
   "outputDir": "../../../.bugfix-output",
-  "repositoriesByExecution": {
-    "你的禅道执行ID": "/absolute/path/to/example-frontend"
+  "repositoriesByProject": {
+    "评论中的所属项目名": "/absolute/path/to/example-frontend"
   },
   "policy": {
     "closedStatuses": ["closed", "已关闭"],

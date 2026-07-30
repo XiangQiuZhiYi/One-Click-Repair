@@ -5,8 +5,8 @@
     "path": "./bugs.fixture.json"
   },
   "outputDir": "../../../.bugfix-output",
-  "repositoriesByExecution": {
-    "100": "/absolute/path/to/example-frontend"
+  "repositoriesByProject": {
+    "example-frontend": "/absolute/path/to/example-frontend"
   },
   "policy": {
     "closedStatuses": ["closed", "已关闭"],

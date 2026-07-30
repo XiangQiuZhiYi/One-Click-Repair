@@ -2,11 +2,11 @@
   "currentUser": "your-zentao-account",
   "source": {
     "type": "fixture",
-    "path": "../../skills/zentao-frontend-bugfix/references/bugs.fixture.json"
+    "path": "../../plugins/one-click-repair/skills/zentao-frontend-bugfix/references/bugs.fixture.json"
   },
   "outputDir": "../../.bugfix-output/forward-test",
-  "repositoriesByExecution": {
-    "100": "../.."
+  "repositoriesByProject": {
+    "example-frontend": "../.."
   },
   "policy": {
     "closedStatuses": ["closed", "已关闭"],

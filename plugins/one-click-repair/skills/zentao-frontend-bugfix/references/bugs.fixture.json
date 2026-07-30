@@ -6,13 +6,19 @@
     "steps": "打开登录页即可看到按钮文案。",
     "severity": 3,
     "priority": 2,
+    "affectedVersion": "1.2.0",
     "product": "示例产品",
     "project": "示例前端项目",
     "execution": 100,
     "executionName": "示例迭代",
     "module": "登录",
     "status": "active",
-    "assignee": "your-zentao-account"
+    "assignee": "your-zentao-account",
+    "comments": [
+      {
+        "comment": "<p>所属项目：example-frontend</p>"
+      }
+    ]
   },
   {
     "id": "102",
@@ -21,13 +27,19 @@
     "steps": "",
     "severity": 2,
     "priority": 2,
+    "affectedVersion": "1.2.0",
     "product": "示例产品",
     "project": "示例前端项目",
     "execution": 100,
     "executionName": "示例迭代",
     "module": "用户管理",
     "status": "active",
-    "assignee": "your-zentao-account"
+    "assignee": "your-zentao-account",
+    "comments": [
+      {
+        "comment": "<p>所属项目：example-frontend</p>"
+      }
+    ]
   },
   {
     "id": "103",
@@ -36,12 +48,18 @@
     "steps": "登录后进入任意受限页面。",
     "severity": 1,
     "priority": 1,
+    "affectedVersion": "1.2.0",
     "product": "示例产品",
     "project": "示例前端项目",
     "execution": 100,
     "executionName": "示例迭代",
     "module": "权限",
     "status": "active",
-    "assignee": "your-zentao-account"
+    "assignee": "your-zentao-account",
+    "comments": [
+      {
+        "comment": "<p>所属项目：example-frontend</p>"
+      }
+    ]
   }
 ]

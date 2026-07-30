@@ -1,17 +1,28 @@
 {
-  "name": "zentao-frontend-bugfix-skill",
-  "version": "0.5.0",
+  "name": "one-click-repair",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "scripts": {
     "bootstrap": "node scripts/bootstrap.mjs",
-    "install-skill": "node scripts/install-skill.mjs",
-    "setup": "node skills/zentao-frontend-bugfix/scripts/bugfix.mjs setup",
-    "start": "node skills/zentao-frontend-bugfix/scripts/bugfix.mjs start",
-    "bugfix": "node skills/zentao-frontend-bugfix/scripts/bugfix.mjs",
+    "install-plugin": "node scripts/install-plugin.mjs",
+    "install-skill": "node scripts/install-plugin.mjs",
+    "setup": "node plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/bugfix.mjs setup",
+    "start": "node plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/bugfix.mjs start",
+    "bugfix": "node plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/bugfix.mjs",
+    "mcp": "node plugins/one-click-repair/scripts/mcp-server.mjs",
+    "build:mcp": "esbuild plugins/one-click-repair/scripts/mcp-server.mjs --bundle --platform=node --format=esm --target=node20 --outfile=plugins/one-click-repair/dist/mcp-server.mjs",
+    "pretest": "npm run build:mcp",
     "test": "node --test"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
   }
 }

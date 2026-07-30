@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { selectCurrentWorkspace } from "../skills/zentao-frontend-bugfix/scripts/lib/workspace.mjs";
+import { selectCurrentWorkspace } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/workspace.mjs";
 
 test("确认修改后直接选择用户当前仓库且不配置项目脚本验证", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "bugfix-workspace-"));
@@ -33,7 +33,8 @@ test("确认修改后直接选择用户当前仓库且不配置项目脚本验�
             repository: {
               name: "demo-web",
               repoPath,
-              executionKey: "100",
+              projectKey: "demo-web",
+              projectName: "demo-web",
             },
           },
         ],

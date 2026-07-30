@@ -75,21 +75,23 @@ export async function inspectConfig(config) {
     );
   }
 
-  const repositoryEntries = Object.entries(config.repositoriesByExecution ?? {});
+  const repositoryEntries = Object.entries(config.repositoriesByProject ?? {});
   if (repositoryEntries.length === 0) {
-    checks.push(check("error", "REPOSITORY_MAPPING", "尚未按所属执行配置当前仓库目录"));
+    checks.push(check("error", "REPOSITORY_MAPPING", "尚未按所属项目配置当前仓库目录"));
   } else {
-    for (const [executionKey, mapping] of repositoryEntries) {
+    for (const [projectKey, mapping] of repositoryEntries) {
       const repository = await inspectRepository(mapping);
       checks.push(
         repository.available
-          ? check("ok", "REPOSITORY", `所属执行 ${executionKey} 的当前仓库目录可用`, {
-              executionKey,
+          ? check("ok", "REPOSITORY", `所属项目 ${mapping.projectName || projectKey} 的当前仓库目录可用`, {
+              projectKey,
+              projectName: mapping.projectName || projectKey,
               name: mapping.name,
               path: mapping.repoPath,
             })
           : check("error", "REPOSITORY", repository.blocker, {
-              executionKey,
+              projectKey,
+              projectName: mapping.projectName || projectKey,
               name: mapping.name,
               path: mapping.repoPath,
             }),

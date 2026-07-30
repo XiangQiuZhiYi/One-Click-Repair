@@ -1,0 +1,20 @@
+{
+  "name": "one-click-repair",
+  "interface": {
+    "displayName": "One Click Repair"
+  },
+  "plugins": [
+    {
+      "name": "one-click-repair",
+      "source": {
+        "source": "local",
+        "path": "./plugins/one-click-repair"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -3,20 +3,24 @@ import { constants } from "node:fs";
 import path from "node:path";
 import { printableValue } from "./utils.mjs";
 
-export function repositoryKeyForBug(bug) {
-  const execution = printableValue(bug.execution).trim();
-  if (execution && execution !== "0") return execution;
-  return `no-execution:${bug.product || "unknown"}:${bug.project || "0"}`;
+export function repositoryKeyForProject(projectName) {
+  return printableValue(projectName).trim().toLocaleLowerCase();
 }
 
-export function findRepository(bug, repositoriesByExecution) {
-  const executionKey = repositoryKeyForBug(bug);
-  const mapping = repositoriesByExecution?.[executionKey];
+export function repositoryKeyForBug(bug) {
+  return repositoryKeyForProject(bug.repositoryProject);
+}
+
+export function findRepository(bug, repositoriesByProject) {
+  const projectKey = repositoryKeyForBug(bug);
+  if (!projectKey) return undefined;
+  const mapping = repositoriesByProject?.[projectKey];
   if (!mapping) return undefined;
   return {
     name: mapping.name,
     repoPath: mapping.repoPath,
-    executionKey,
+    projectKey,
+    projectName: bug.repositoryProject,
   };
 }
 

@@ -33,13 +33,16 @@ function bugMarkdown(item) {
 ## 禅道信息
 
 - 产品：${item.bug.product || "未提供"}
-- 项目：${item.bug.project || "未提供"}
+- 禅道项目：${item.bug.project || "未提供"}
 - 所属执行：${item.bug.executionName || "未提供"}（ID：${item.bug.execution || "未提供"}）
+- 所属项目（评论标记）：${item.bug.repositoryProject || "未提供"}
 - 仓库映射 Key：${item.repositoryKey || "未提供"}
 - 模块：${item.bug.module || "未提供"}
 - 状态：${item.bug.status || "未提供"}
 - 严重程度：${item.bug.severity ?? "未提供"}
 - 优先级：${item.bug.priority ?? "未提供"}
+- 影响版本：${item.bug.affectedVersion || "未提供"}
+- 解决版本：${item.bug.resolvedVersion || "未提供"}
 - 链接：${item.bug.url || "未提供"}
 
 ## 描述
@@ -85,14 +88,14 @@ function summaryMarkdown(report) {
       .filter((item) => item.triage.decision === decision)
       .map(
         (item) =>
-          `| ${markdownCell(item.bug.id)} | ${markdownCell(item.bug.title)} | ${markdownCell(item.bug.executionName || item.bug.execution || "未提供")} | ${item.triage.category} | ${markdownCell(item.repository?.name || "未匹配")} | ${item.triage.confidence} |`,
+          `| ${markdownCell(item.bug.id)} | ${markdownCell(item.bug.title)} | ${markdownCell(item.bug.repositoryProject || "未备注")} | ${markdownCell(item.bug.executionName || item.bug.execution || "未提供")} | ${item.triage.category} | ${markdownCell(item.repository?.name || "未匹配")} | ${item.triage.confidence} |`,
       )
       .join("\n");
     return `## ${DECISION_LABELS[decision]}
 
-| Bug | 标题 | 所属执行 | 类型 | 仓库 | 置信度 |
-| --- | --- | --- | --- | --- | --- |
-${rows || "| - | 暂无 | - | - | - | - |"}`;
+| Bug | 标题 | 所属项目 | 所属执行 | 类型 | 仓库 | 置信度 |
+| --- | --- | --- | --- | --- | --- | --- |
+${rows || "| - | 暂无 | - | - | - | - | - |"}`;
   }).join("\n\n");
   return `# 禅道前端 Bug 分诊报告
 

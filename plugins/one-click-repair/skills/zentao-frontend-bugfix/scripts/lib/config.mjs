@@ -1,4 +1,5 @@
 import path from "node:path";
+import { repositoryKeyForProject } from "./repository.mjs";
 import { readJson, resolvePath } from "./utils.mjs";
 
 const DEFAULT_POLICY = {
@@ -24,6 +25,8 @@ const ZENTAO_V1_FIELDS = {
   steps: "steps",
   severity: "severity",
   priority: "pri",
+  affectedVersion: "openedBuild",
+  resolvedVersion: "resolvedBuild",
   product: "productName",
   project: "projectName",
   execution: "execution",
@@ -130,27 +133,29 @@ export async function loadConfig(configPath) {
     }
   }
 
-  const repositoriesByExecution = raw.repositoriesByExecution ?? {};
+  const repositoriesByProject = raw.repositoriesByProject ?? {};
   if (
-    typeof repositoriesByExecution !== "object" ||
-    repositoriesByExecution == null ||
-    Array.isArray(repositoriesByExecution)
+    typeof repositoriesByProject !== "object" ||
+    repositoriesByProject == null ||
+    Array.isArray(repositoriesByProject)
   ) {
-    throw new Error("repositoriesByExecution 必须是以所属执行 ID 为 key 的对象");
+    throw new Error("repositoriesByProject 必须是以评论中的所属项目名称为 key 的对象");
   }
   const normalizedRepositories = Object.fromEntries(
-    Object.entries(repositoriesByExecution).map(([executionKey, value]) => {
-      assertString(executionKey, "repositoriesByExecution 的所属执行 ID");
+    Object.entries(repositoriesByProject).map(([projectName, value]) => {
+      assertString(projectName, "repositoriesByProject 的所属项目名称");
+      const projectKey = repositoryKeyForProject(projectName);
       const entry = typeof value === "string" ? { repoPath: value } : value;
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-        throw new Error(`repositoriesByExecution.${executionKey} 必须是仓库路径或配置对象`);
+        throw new Error(`repositoriesByProject.${projectName} 必须是仓库路径或配置对象`);
       }
-      assertString(entry.repoPath, `repositoriesByExecution.${executionKey}.repoPath`);
+      assertString(entry.repoPath, `repositoriesByProject.${projectName}.repoPath`);
       return [
-        executionKey,
+        projectKey,
         {
           name: entry.name || path.basename(entry.repoPath),
           repoPath: resolvePath(configDir, entry.repoPath),
+          projectName,
         },
       ];
     }),
@@ -192,7 +197,7 @@ export async function loadConfig(configPath) {
           : raw.source.fields,
     },
     outputDir: resolvePath(configDir, raw.outputDir || ".bugfix-output"),
-    repositoriesByExecution: normalizedRepositories,
+    repositoriesByProject: normalizedRepositories,
     policy: {
       ...DEFAULT_POLICY,
       ...(raw.policy ?? {}),

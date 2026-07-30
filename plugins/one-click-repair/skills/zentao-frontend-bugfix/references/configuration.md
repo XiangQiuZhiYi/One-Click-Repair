@@ -46,19 +46,21 @@
 npm run bootstrap -- --base-url https://zentao.example.com/zentao
 ```
 
-命令会安装 Skill、生成用户配置、询问禅道登录账号，再由 macOS 系统钥匙串隐藏询问
-密码。密码只保存在 macOS 钥匙串中；账号和短期 Token 文件权限为 `0600`。
+命令会安装或更新 One-Click-Repair Plugin、生成用户配置、询问禅道登录账号，再由
+macOS 系统钥匙串隐藏询问密码。密码只保存在 macOS 钥匙串中；账号和短期 Token
+文件权限为 `0600`。
 
 初始化时会请求 `POST /api.php/v1/tokens` 验证凭据并生成 Token。以后执行一键禅道时，
 如果接口返回 `401`，程序会自动从钥匙串读取账号密码、重新获取 Token，并将原只读
 拉取任务重试一次。密码不会写入配置、报告、日志或命令参数。
 
-执行器会自动查找 `ZENTAO_BUGFIX_CONFIG`、当前目录的 `.bugfix.local.json`，以及
-Codex 用户目录下的 `zentao-frontend-bugfix/config.json`。因此安装完成后 Codex 可以
-在任意工作目录运行：
+MCP Server 会自动查找 `ZENTAO_BUGFIX_CONFIG`、当前目录的
+`.bugfix.local.json`，以及 Codex 用户目录下的
+`zentao-frontend-bugfix/config.json`。因此安装完成后 Codex 可以在任意工作目录通过
+`zentao_list_my_bugs` 拉取数据。兼容 CLI 仅用于诊断：
 
 ```bash
-node /absolute/path/to/installed-skill/scripts/bugfix.mjs start
+npm run start
 ```
 
 没有完成初始化时，执行器会提示运行 `npm run bootstrap`，不会在 Codex 聊天中索取
@@ -105,6 +107,8 @@ node /absolute/path/to/installed-skill/scripts/bugfix.mjs start
       "steps": "steps",
       "severity": "severity",
       "priority": "pri",
+      "affectedVersion": "openedBuild",
+      "resolvedVersion": "resolvedBuild",
       "product": "productName",
       "project": "projectName",
       "execution": "execution",
@@ -143,42 +147,48 @@ node /absolute/path/to/installed-skill/scripts/bugfix.mjs start
 
 ## 接入自检
 
-填写配置后先运行：
+填写配置后可以运行：
 
 ```bash
-node scripts/bugfix.mjs doctor --config /absolute/path/config.json
+npm run bugfix -- doctor --config /absolute/path/config.json
 ```
 
 自检只检查 Fixture、认证环境变量和仓库目录，不会请求禅道、修改仓库或运行项目脚本。
 
-## 按所属执行保存仓库
+## 按评论中的所属项目保存仓库
 
-使用 Bug 详情中的所属执行 ID 作为稳定 key。用户首次提供目录后，将它写入本地配置：
+用户查看或创建 Bug 时，在评论中添加：
+
+```text
+所属项目：sisreact
+```
+
+拉取后使用该项目名作为稳定 key。兼容旧写法 `属于项目：sisreact`，多个标记存在时
+以最新评论为准。用户首次提供目录后，将它写入本地配置：
 
 ```json
 {
-  "repositoriesByExecution": {
-    "2640": "/absolute/path/to/current-workspace"
+  "repositoriesByProject": {
+    "sisreact": "/absolute/path/to/current-workspace"
   }
 }
 ```
 
-执行 ID 在同一禅道实例中稳定且唯一；执行名称只用于界面展示。后续 Bug 的
-`execution` 等于 `2640` 时直接复用该目录，不再询问用户。
-
-如果 Bug 没有所属执行或执行 ID 为 `0`，使用
-`no-execution:<产品>:<项目>` 作为避免冲突的兜底 key。
+项目名比较时忽略大小写。后续评论标记同一项目时直接复用该目录，不再询问用户。
+禅道所属执行只用于展示，不能作为仓库映射依据；同一执行下可能同时包含多个前端
+项目，例如 `sisreact` 和 `sisvue`。
 
 仓库目录必须由用户提供，指向用户已经准备好的当前目录或 worktree。流程不自动搜索，
 也不执行 Git 命令。
 
-Codex 使用内置命令持久化映射：
+评论缺少 `所属项目：XXX` 时，先提示用户在禅道补充备注并重新拉取，不能从标题、
+所属执行、禅道项目字段或本地目录猜测。
 
-```bash
-node /absolute/path/to/installed-skill/scripts/bugfix.mjs repository \
-  --key 2640 \
-  --repo /absolute/path/to/current-workspace
-```
+Codex 使用 MCP 工具 `repository_set_by_project` 持久化映射，传入评论中的项目名和
+用户明确提供的仓库绝对路径，同时传入首次拉取返回的 `reportPath`。工具会读取现有
+报告，在本地重新检查仓库并更新预分诊结果；该过程不请求禅道。Codex 直接使用返回的
+`reportRefresh.items` 生成最终清单，不因保存映射而重新调用
+`zentao_list_my_bugs`。
 
 ## 修改后复核
 
@@ -198,7 +208,7 @@ typecheck 或 build。修改后由 Codex 重新阅读改动文件及其调用链
 信息不足、高风险或没有仓库映射仍不会进入自动修复。
 
 进入 `AUTO_FIX` 也只表示进入“可直接修改”预览清单。只有用户看到最终清单并在聊天中
-明确回复 `确认修改` 后，Codex 才能运行 `workspace --confirmed` 并修改代码。
+明确回复 `确认修改` 后，Codex 才能调用 `workspace_select_for_bug` 并修改代码。
 
 可通过 `policy.highRiskKeywords` 添加团队特有的高风险词。默认风险词始终生效。
 

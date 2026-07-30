@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { loadRawBugs } from "../skills/zentao-frontend-bugfix/scripts/lib/source.mjs";
+import { loadRawBugs } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/source.mjs";
 
 test("REST 数据源支持字段路径、环境变量和分页", async () => {
   const requested = [];

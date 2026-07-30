@@ -3,9 +3,20 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { loadConfig } from "../skills/zentao-frontend-bugfix/scripts/lib/config.mjs";
-import { writeTriageReport } from "../skills/zentao-frontend-bugfix/scripts/lib/report.mjs";
-import { triageBugs } from "../skills/zentao-frontend-bugfix/scripts/lib/triage.mjs";
+import { loadConfig } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/config.mjs";
+import { extractRepositoryProject } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/normalize.mjs";
+import { writeTriageReport } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/report.mjs";
+import { triageBugs } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/triage.mjs";
+
+test("所属项目解析兼容旧写法并以最新评论为准", () => {
+  assert.equal(
+    extractRepositoryProject([
+      { comment: "<p>属于项目：sisvue</p>" },
+      { comment: "<p>所属项目：sisreact</p>" },
+    ]),
+    "sisreact",
+  );
+});
 
 test("离线数据可以完成跨结论分诊并生成报告", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "bugfix-triage-"));
@@ -31,6 +42,7 @@ test("离线数据可以完成跨结论分诊并生成报告", async () => {
           status: "active",
           assignee: "me",
           severity: 3,
+          comments: [{ comment: "<p>所属项目：web-react</p>" }],
         },
         {
           id: "102",
@@ -45,6 +57,7 @@ test("离线数据可以完成跨结论分诊并生成报告", async () => {
           status: "active",
           assignee: "me",
           severity: 3,
+          comments: [{ comment: "<p>所属项目：other-vue</p>" }],
         },
         {
           id: "103",
@@ -63,8 +76,8 @@ test("离线数据可以完成跨结论分诊并生成报告", async () => {
         currentUser: "me",
         source: { type: "fixture", path: "./bugs.json" },
         outputDir: "./output",
-        repositoriesByExecution: {
-          "100": repoPath,
+        repositoriesByProject: {
+          "web-react": repoPath,
         },
       }),
     );
@@ -73,10 +86,11 @@ test("离线数据可以完成跨结论分诊并生成报告", async () => {
     const items = await triageBugs(config);
     assert.equal(items.length, 2);
     assert.equal(items[0].triage.decision, "AUTO_FIX");
-    assert.equal(items[0].repositoryKey, "100");
-    assert.equal(items[0].repository.executionKey, "100");
+    assert.equal(items[0].bug.repositoryProject, "web-react");
+    assert.equal(items[0].repositoryKey, "web-react");
+    assert.equal(items[0].repository.projectKey, "web-react");
     assert.equal(items[1].triage.decision, "BLOCKED");
-    assert.equal(items[1].repositoryKey, "200");
+    assert.equal(items[1].repositoryKey, "other-vue");
 
     const output = await writeTriageReport(config, items);
     assert.equal(output.report.stats.byDecision.AUTO_FIX, 1);
@@ -84,8 +98,109 @@ test("离线数据可以完成跨结论分诊并生成报告", async () => {
     assert.match(await readFile(output.markdownPath, "utf8"), /Bug 总数：2/);
     assert.match(await readFile(output.markdownPath, "utf8"), /可直接修改（等待用户确认修改）/);
     assert.match(await readFile(output.markdownPath, "utf8"), /仓库或环境待配置/);
+    assert.match(await readFile(output.markdownPath, "utf8"), /web-react/);
     assert.match(await readFile(output.markdownPath, "utf8"), /Web 迭代/);
     assert.match(await readFile(path.join(config.outputDir, "bugs", "101.md"), "utf8"), /AUTO_FIX/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("同一所属执行下根据评论中的不同项目选择不同仓库", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "bugfix-project-mapping-"));
+  try {
+    const fixturePath = path.join(directory, "bugs.json");
+    const configPath = path.join(directory, "config.json");
+    const reactRepo = path.join(directory, "sisreact");
+    const vueRepo = path.join(directory, "sisvue");
+    await mkdir(reactRepo);
+    await mkdir(vueRepo);
+    await writeFile(
+      fixturePath,
+      JSON.stringify([
+        {
+          id: "201",
+          title: "React 页面文案错误",
+          description: "页面当前显示错误文案，预期显示正确文案。",
+          steps: "打开页面即可看到。",
+          execution: 2640,
+          executionName: "课时统计翻新",
+          status: "active",
+          assignee: "me",
+          severity: 3,
+          comments: [{ comment: "<p>所属项目：sisreact</p>" }],
+        },
+        {
+          id: "202",
+          title: "Vue 页面文案错误",
+          description: "页面当前显示错误文案，预期显示正确文案。",
+          steps: "打开页面即可看到。",
+          execution: 2640,
+          executionName: "课时统计翻新",
+          status: "active",
+          assignee: "me",
+          severity: 3,
+          comments: [{ comment: "<p>所属项目：sisvue</p>" }],
+        },
+      ]),
+    );
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        currentUser: "me",
+        source: { type: "fixture", path: "./bugs.json" },
+        repositoriesByProject: {
+          sisreact: reactRepo,
+          sisvue: vueRepo,
+        },
+      }),
+    );
+
+    const config = await loadConfig(configPath);
+    const items = await triageBugs(config);
+    assert.equal(items[0].repository.repoPath, reactRepo);
+    assert.equal(items[1].repository.repoPath, vueRepo);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("缺少所属项目评论时不会回退到所属执行仓库", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "bugfix-project-required-"));
+  try {
+    const fixturePath = path.join(directory, "bugs.json");
+    const configPath = path.join(directory, "config.json");
+    await writeFile(
+      fixturePath,
+      JSON.stringify([
+        {
+          id: "301",
+          title: "按钮文案错误",
+          description: "按钮当前显示错误文案，预期显示保存。",
+          steps: "打开页面即可看到。",
+          execution: 2640,
+          executionName: "课时统计翻新",
+          status: "active",
+          assignee: "me",
+          severity: 3,
+        },
+      ]),
+    );
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        currentUser: "me",
+        source: { type: "fixture", path: "./bugs.json" },
+        repositoriesByExecution: { "2640": directory },
+      }),
+    );
+
+    const config = await loadConfig(configPath);
+    const [item] = await triageBugs(config);
+    assert.equal(item.repositoryKey, "");
+    assert.equal(item.repository, undefined);
+    assert.equal(item.triage.decision, "BLOCKED");
+    assert.match(item.triage.questions.join("\n"), /所属项目：XXX/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

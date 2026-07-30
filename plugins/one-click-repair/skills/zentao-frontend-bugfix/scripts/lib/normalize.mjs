@@ -7,6 +7,8 @@ const DEFAULT_FIELDS = {
   steps: "steps",
   severity: "severity",
   priority: "priority",
+  affectedVersion: "affectedVersion",
+  resolvedVersion: "resolvedVersion",
   product: "product",
   project: "project",
   execution: "execution",
@@ -29,9 +31,34 @@ function numericOrText(value) {
   return Number.isFinite(numeric) ? numeric : printableValue(value);
 }
 
+function commentText(comment) {
+  if (typeof comment === "string") return stripHtml(comment);
+  if (!comment || typeof comment !== "object") return "";
+  return stripHtml(
+    comment.comment ??
+      comment.content ??
+      comment.text ??
+      comment.desc ??
+      "",
+  );
+}
+
+export function extractRepositoryProject(comments = []) {
+  const items = Array.isArray(comments) ? comments : [comments];
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    const text = commentText(items[index]);
+    const match = text.match(/(?:所属|属于)项目\s*[:：]\s*([^\r\n]+)/iu);
+    if (match?.[1]) {
+      return match[1].trim().replace(/[。；;，,]+$/u, "").trim();
+    }
+  }
+  return "";
+}
+
 export function normalizeBug(raw, fields = {}) {
   const mergedFields = { ...DEFAULT_FIELDS, ...fields };
   const id = printableValue(mapped(raw, mergedFields, "id")).trim();
+  const comments = mapped(raw, mergedFields, "comments") ?? [];
   return {
     id,
     title: stripHtml(mapped(raw, mergedFields, "title")),
@@ -39,6 +66,12 @@ export function normalizeBug(raw, fields = {}) {
     steps: stripHtml(mapped(raw, mergedFields, "steps")),
     severity: numericOrText(mapped(raw, mergedFields, "severity")),
     priority: numericOrText(mapped(raw, mergedFields, "priority")),
+    affectedVersion: printableValue(
+      mapped(raw, mergedFields, "affectedVersion"),
+    ).trim(),
+    resolvedVersion: printableValue(
+      mapped(raw, mergedFields, "resolvedVersion"),
+    ).trim(),
     product: printableValue(mapped(raw, mergedFields, "product")).trim(),
     project: printableValue(mapped(raw, mergedFields, "project")).trim(),
     execution: printableValue(mapped(raw, mergedFields, "execution")).trim(),
@@ -48,7 +81,8 @@ export function normalizeBug(raw, fields = {}) {
     assignee: printableValue(mapped(raw, mergedFields, "assignee")).trim(),
     url: printableValue(mapped(raw, mergedFields, "url")).trim(),
     attachments: mapped(raw, mergedFields, "attachments") ?? [],
-    comments: mapped(raw, mergedFields, "comments") ?? [],
+    comments,
+    repositoryProject: extractRepositoryProject(comments),
   };
 }
 

@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { findDefaultConfigPath } from "../skills/zentao-frontend-bugfix/scripts/lib/config-path.mjs";
+import { findDefaultConfigPath } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/config-path.mjs";
 
 test("执行器可以在任意目录发现 CODEX_HOME 中的用户配置", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "bugfix-config-path-"));

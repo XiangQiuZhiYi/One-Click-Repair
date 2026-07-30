@@ -1,4 +1,0 @@
-interface:
-  display_name: "禅道前端 Bug 分诊与修复"
-  short_description: "按执行复用仓库，预览确认后修改并做逻辑复核"
-  default_prompt: "使用 $zentao-frontend-bugfix 拉取并逐条分析我的禅道前端 Bug，按所属执行复用已保存的仓库目录，展示修改清单；在我回复“确认修改”前不要改代码，修改后不要运行项目脚本。"

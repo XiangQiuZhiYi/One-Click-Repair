@@ -1,0 +1,10 @@
+interface:
+  display_name: "禅道前端 Bug 分诊与修复"
+  short_description: "通过 MCP 拉取 Bug，按评论所属项目复用仓库并确认后修改"
+  default_prompt: "使用 $zentao-frontend-bugfix 通过 MCP 拉取并逐条分析我的禅道前端 Bug，展示最终清单并等待我回复“确认修改”。"
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "one-click-repair"
+      description: "连接禅道并管理评论所属项目与本地仓库映射"
+      transport: "stdio"

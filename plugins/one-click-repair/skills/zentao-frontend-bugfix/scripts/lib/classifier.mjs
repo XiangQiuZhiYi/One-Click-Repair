@@ -140,10 +140,13 @@ export function classifyBug(bug, repository, policy) {
 
   if (!repository) {
     decision = "BLOCKED";
-    reasons.push("没有匹配到本地代码仓库");
-    questions.push(
-      `所属执行“${bug.executionName || bug.execution || "未分配执行"}”对应哪个当前本地仓库目录？`,
-    );
+    if (!bug.repositoryProject) {
+      reasons.push("禅道评论中缺少“所属项目：XXX”标记");
+      questions.push("请先在该 Bug 的禅道评论中备注“所属项目：XXX”，然后重新执行一键禅道。");
+    } else {
+      reasons.push(`所属项目“${bug.repositoryProject}”没有匹配到本地代码仓库`);
+      questions.push(`项目“${bug.repositoryProject}”对应哪个当前本地仓库绝对路径？`);
+    }
   } else if (repository.available === false) {
     decision = "BLOCKED";
     reasons.push(repository.blocker || "本地代码仓库不可用");

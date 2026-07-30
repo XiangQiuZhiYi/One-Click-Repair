@@ -4,9 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { storeRepositoryByExecution } from "../skills/zentao-frontend-bugfix/scripts/lib/repository-store.mjs";
+import { storeRepositoryByProject } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/repository-store.mjs";
 
-test("用户提供仓库后按所属执行 key 持久化并可重复更新", async () => {
+test("用户提供仓库后按评论中的所属项目持久化并可重复更新", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "bugfix-repository-store-"));
   try {
     const configPath = path.join(directory, "config.json");
@@ -14,13 +14,13 @@ test("用户提供仓库后按所属执行 key 持久化并可重复更新", asy
     const secondRepo = path.join(directory, "repo-b");
     await mkdir(firstRepo);
     await mkdir(secondRepo);
-    await writeFile(configPath, '{"repositoriesByExecution":{}}\n', { mode: 0o600 });
+    await writeFile(configPath, '{"repositoriesByProject":{}}\n', { mode: 0o600 });
 
-    await storeRepositoryByExecution(configPath, "2640", firstRepo);
-    await storeRepositoryByExecution(configPath, "2640", secondRepo);
+    await storeRepositoryByProject(configPath, "SisReact", firstRepo);
+    await storeRepositoryByProject(configPath, "sisreact", secondRepo);
 
     const config = JSON.parse(await readFile(configPath, "utf8"));
-    assert.deepEqual(config.repositoriesByExecution, { "2640": secondRepo });
+    assert.deepEqual(config.repositoriesByProject, { sisreact: secondRepo });
     assert.equal((await stat(configPath)).mode & 0o777, 0o600);
   } finally {
     await rm(directory, { recursive: true, force: true });

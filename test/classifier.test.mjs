@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { classifyBug } from "../skills/zentao-frontend-bugfix/scripts/lib/classifier.mjs";
+import { classifyBug } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/classifier.mjs";
 
 const policy = {
   autoFixCategories: ["STYLE", "COPY", "FORM_VALIDATION", "NULL_GUARD", "API_MAPPING", "BUILD"],
@@ -13,7 +13,8 @@ const policy = {
 const repository = {
   name: "web",
   repoPath: "/tmp/web",
-  executionKey: "100",
+  projectKey: "web",
+  projectName: "web",
 };
 
 test("明确的低风险文案问题进入 AUTO_FIX", () => {
@@ -73,11 +74,30 @@ test("没有仓库映射时进入 BLOCKED", () => {
       description: "按钮显示为错误文字，预期应显示为保存。",
       steps: "打开编辑页面即可看到。",
       severity: 3,
+      repositoryProject: "web",
     },
     undefined,
     policy,
   );
   assert.equal(result.decision, "BLOCKED");
+  assert.match(result.questions.join("\n"), /项目“web”/);
+});
+
+test("评论缺少所属项目标记时提示先补禅道备注", () => {
+  const result = classifyBug(
+    {
+      id: "missing-project",
+      title: "按钮文案拼写错误",
+      description: "按钮显示为错误文字，预期应显示为保存。",
+      steps: "打开编辑页面即可看到。",
+      severity: 3,
+      repositoryProject: "",
+    },
+    undefined,
+    policy,
+  );
+  assert.equal(result.decision, "BLOCKED");
+  assert.match(result.questions.join("\n"), /所属项目：XXX/);
 });
 
 test("评论中的明确预期参与分类", () => {

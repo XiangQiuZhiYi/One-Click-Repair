@@ -4,7 +4,7 @@ import {
   keychainServiceFor,
   promptAndStoreKeychainPassword,
   readKeychainPassword,
-} from "../skills/zentao-frontend-bugfix/scripts/lib/keychain.mjs";
+} from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/keychain.mjs";
 
 test("钥匙串服务名稳定且不同禅道地址相互隔离", () => {
   const first = keychainServiceFor("https://zentao.example.com/zentao/");

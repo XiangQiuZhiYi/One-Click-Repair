@@ -7,7 +7,7 @@ import {
   ensureZentaoToken,
   setupZentaoCredentials,
   withAutomaticTokenRefresh,
-} from "../skills/zentao-frontend-bugfix/scripts/lib/auth.mjs";
+} from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/auth.mjs";
 
 function zentaoConfig(directory) {
   return {

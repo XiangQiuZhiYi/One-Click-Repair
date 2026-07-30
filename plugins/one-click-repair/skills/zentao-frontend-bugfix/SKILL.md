@@ -1,6 +1,6 @@
 ---
 name: zentao-frontend-bugfix
-description: 通过 Codex 聊天批量拉取并逐条语义分析禅道中指派给当前用户的前端 Bug，先展示可直接修改、等待确认、人工处理和仓库待配置清单，按 Bug 所属执行 ID 持久化当前本地仓库目录，并仅在用户明确回复“确认修改”后直接修改代码和做代码逻辑复核。用于用户提出“执行一键禅道”“拉取我的禅道 Bug”“分析禅道 Bug”“分类并修复 Bug”或集中处理多个前端项目 Bug 时。
+description: 通过 Codex 聊天批量拉取并逐条语义分析禅道中指派给当前用户的前端 Bug，从评论中的“所属项目：XXX”识别代码项目并按项目持久化当前本地仓库目录，先展示可直接修改、等待确认、人工处理和仓库待配置清单，仅在用户明确回复“确认修改”后直接修改代码和做代码逻辑复核。用于用户提出“执行一键禅道”“拉取我的禅道 Bug”“分析禅道 Bug”“分类并修复 Bug”或集中处理多个前端项目 Bug 时。
 ---
 
 # 禅道前端 Bug 分诊与确认后修复
@@ -11,14 +11,17 @@ description: 通过 Codex 聊天批量拉取并逐条语义分析禅道中指派
 
 ### 预览阶段
 
-1. 执行本 Skill 的 `scripts/bugfix.mjs start`。执行器依次查找
-   `ZENTAO_BUGFIX_CONFIG`、当前目录的 `.bugfix.local.json`，以及 Codex 用户目录下
-   `zentao-frontend-bugfix/config.json`。
-2. Token 失效时，让脚本自动使用 macOS 钥匙串中的凭据重新登录并重试一次；不得在
-   聊天中索取、显示或复述账号、密码及 Token。
-3. 读取 `triage.json`，逐条结合描述、复现步骤、期望结果和评论做语义分析。关键词
-   分类只是候选提示，不能替代 Codex 判断。
+1. 调用 One-Click-Repair MCP 的 `zentao_auth_status`。如果返回
+   `setupRequired: true`，提示用户在克隆的 One-Click-Repair 项目中运行一次
+   `npm run bootstrap`，不得在聊天中索取账号、密码或 Token。
+2. 调用 `zentao_list_my_bugs`。MCP 会依次查找 `ZENTAO_BUGFIX_CONFIG`、当前目录的
+   `.bugfix.local.json`，以及 Codex 用户目录下
+   `zentao-frontend-bugfix/config.json`。Token 失效时由 MCP 自动使用 macOS
+   钥匙串中的凭据重新登录并重试一次；不得显示或复述任何凭据。
+3. 使用工具返回的 `items` 和 `reportPath`，逐条结合描述、复现步骤、期望结果和
+   评论做语义分析。关键词分类只是候选提示，不能替代 Codex 判断。
 4. 对每个 Bug 输出：
+   - 所属项目：只使用评论中最近一次 `所属项目：XXX` 的值；
    - 核心问题：实际表现、预期表现和差异；
    - 问题类型：只能选择 `逻辑`、`样式`、`需求`；
    - 是否需要确认：`是` 或 `否`；
@@ -28,12 +31,19 @@ description: 通过 Codex 聊天批量拉取并逐条语义分析禅道中指派
    - 等待确认：缺少会改变实现方向的信息；
    - 需要人工处理：高风险、跨前后端或大范围改造；
    - 仓库待配置：尚未提供当前本地仓库目录。
-6. 对未映射的每个所属执行询问一次“当前本地仓库目录”。使用 Bug 详情中的
-   `execution` ID 作为 `repositoriesByExecution` 的 key；执行名称只用于展示。
-   不自动搜索、推测或从禅道评论采信绝对路径。收到路径后执行本 Skill 的
-   `scripts/bugfix.mjs repository --key EXECUTION_KEY --repo ABSOLUTE_PATH`，立即写入
-   本地配置，检查目录是否可读写及 `package.json` 等项目文件，并重新分诊。后续同一
-   执行自动复用目录。
+6. 从每条 Bug 评论中读取最近一次 `所属项目：XXX`；兼容已有的
+   `属于项目：XXX` 写法。禅道的所属执行只用于展示，绝不能作为仓库映射依据。
+   - 评论缺少所属项目标记：归入仓库待配置，提示用户先在禅道评论补充
+     `所属项目：XXX`，然后重新拉取；不要推测项目。
+   - 项目已标记但未映射：对每个未映射项目只询问一次“当前本地仓库绝对路径”。
+   - 收到路径后调用 `repository_set_by_project`，传入 `project_name` 和用户给出的
+     绝对路径，同时传入本次 `zentao_list_my_bugs` 返回的 `reportPath`。工具会立即
+     写入本地配置、检查目录是否可读写及 `package.json` 等项目文件，并通过
+     `reportRefresh.items` 在本地重新分诊现有 Bug。后续同一项目自动复用目录。
+   - 保存映射后直接使用 `reportRefresh` 展示最终清单，不得仅因仓库映射变化而再次
+     调用 `zentao_list_my_bugs`，也不得重复进行已经完成的 Bug 语义分析。只有用户
+     修改了禅道评论、明确要求刷新，或当前 Bug 数据已失效时才重新拉取禅道。
+   不自动搜索、推测或从禅道评论采信绝对路径；评论只提供项目名称。
 7. 仓库信息齐全后，再展示一次最终修改清单和等待确认清单，并明确提示：
    `如要开始修改，请回复：确认修改`。到此必须停止，不能读取代码后顺手修改。
 
@@ -44,16 +54,10 @@ description: 通过 Codex 聊天批量拉取并逐条语义分析禅道中指派
 
 1. 只处理本次最终清单中 `AUTO_FIX` 的 Bug；`NEED_CONFIRM`、`HUMAN_REQUIRED` 和
    `BLOCKED` 均不得修改。
-2. 为每个 Bug 执行：
-
-```bash
-node /absolute/path/to/installed-skill/scripts/bugfix.mjs workspace \
-  --report /absolute/path/triage.json \
-  --bug BUG_ID \
-  --confirmed
-```
-
-3. 在返回的 `workspacePath`（用户提供的当前仓库目录）中直接进行最小修改。
+2. 为每个 Bug 调用 `workspace_select_for_bug`，传入本次预览返回的 `reportPath`、
+   Bug ID 和 `confirmed: true`。该工具只校验确认门禁并返回用户提供的当前仓库目录，
+   不修改代码。
+3. 在返回的 `workspacePath` 中直接进行最小修改。
 4. 检查仓库内的 `AGENTS.md`、项目说明和适用 Skill；保护用户已有文件，只改与 Bug
    直接相关的内容。
 5. 逐个处理同一仓库的 Bug，避免交叉覆盖；发现新的业务不确定性时立即停止该 Bug，
@@ -77,6 +81,7 @@ node /absolute/path/to/installed-skill/scripts/bugfix.mjs workspace \
 
 识别禅道中的简短人工标记：
 
+- `所属项目：项目名`（兼容 `属于项目：项目名`）
 - `类型：逻辑 / 样式 / 需求 / 缺少需求`
 - `状态：直接处理 / 可处理 / 待确认`
 
@@ -84,39 +89,37 @@ node /absolute/path/to/installed-skill/scripts/bugfix.mjs workspace \
 
 ## 初始化和拉取
 
-用户克隆 One-Click-Repair 后仅执行一次：
+用户克隆 One-Click-Repair 后执行：
 
 ```bash
+npm install
 npm run bootstrap -- --base-url https://禅道地址/zentao
 ```
 
-初始化器将 Skill 安装到 Codex Skill 目录，将配置和运行数据保存到 Codex 用户目录的
-`zentao-frontend-bugfix/`。账号和 Token 文件权限为 `0600`，密码只保存在 macOS
+初始化器会添加仓库内的 `one-click-repair` Marketplace、安装或更新 Plugin、生成
+本地配置并初始化禅道凭据。配置和运行数据保存在 Codex 用户目录的
+`zentao-frontend-bugfix/`；账号和 Token 文件权限为 `0600`，密码只保存在 macOS
 钥匙串。初始化后要求用户完全退出并重新打开 Codex。
 
-日常拉取由 Codex 运行当前已加载 Skill 目录中的：
+日常拉取必须优先使用 Plugin 提供的 MCP 工具，不要求用户执行命令行。只有在诊断
+Plugin 安装问题时，才允许在 One-Click-Repair 源码目录使用兼容 CLI：
 
 ```bash
-node /absolute/path/to/installed-skill/scripts/bugfix.mjs start
+npm run start
 ```
 
-也可显式执行：
-
-```bash
-node /absolute/path/to/installed-skill/scripts/bugfix.mjs triage
-```
-
-不得因为命令正常退出而停止流程；必须读取报告并完成预览。
+不得因为 MCP 工具正常返回而停止流程；必须继续逐条语义分析并完成预览。
 
 ## 仓库映射
 
 收到用户给出的当前仓库目录后，读取
 [references/configuration.md](references/configuration.md)，将地址写入
-`repositoriesByExecution[executionId]`。必须使用 `repository --key --repo` 命令持久化，
-不要只记在聊天上下文中。后续同一所属执行不再询问。
+`repositoriesByProject[projectName]`。必须使用 `repository_set_by_project`
+持久化，并传入本次报告路径以本地刷新报告，不要只记在聊天上下文中。项目名来自
+Bug 评论中的 `所属项目：XXX`，比较时忽略大小写；后续同一项目不再询问。
 
-Bug 没有所属执行或执行 ID 为 `0` 时，使用
-`no-execution:<产品>:<项目>` 作为兜底 key，避免不同产品互相覆盖。
+不要使用禅道 `execution`、`executionName` 或禅道项目字段推断仓库。同一所属执行下
+可能同时包含 `sisreact`、`sisvue` 等多个代码项目，只有评论标记是仓库映射依据。
 
 仓库目录只用于内容修改和代码阅读，不要求它是 Git 仓库，不检查分支。
 

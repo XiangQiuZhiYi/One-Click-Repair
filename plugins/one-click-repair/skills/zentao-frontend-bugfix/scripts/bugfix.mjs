@@ -11,7 +11,7 @@ import { findDefaultConfigPath } from "./lib/config-path.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { inspectConfig } from "./lib/doctor.mjs";
 import { writeTriageReport } from "./lib/report.mjs";
-import { storeRepositoryByExecution } from "./lib/repository-store.mjs";
+import { storeRepositoryByProject } from "./lib/repository-store.mjs";
 import { triageBugs } from "./lib/triage.mjs";
 import { selectCurrentWorkspace } from "./lib/workspace.mjs";
 
@@ -46,7 +46,7 @@ function printHelp() {
   bugfix.mjs start [--config /absolute/path/config.json]
   bugfix.mjs setup [--config /absolute/path/config.json]
   bugfix.mjs doctor [--config /absolute/path/config.json]
-  bugfix.mjs repository [--config /absolute/path/config.json] --key EXECUTION_KEY --repo /absolute/path
+  bugfix.mjs repository [--config /absolute/path/config.json] --project PROJECT_NAME --repo /absolute/path
   bugfix.mjs workspace [--config /absolute/path/config.json] --report /absolute/path/triage.json --bug BUG_ID --confirmed
 `);
 }
@@ -124,11 +124,11 @@ async function main() {
   }
 
   if (command === "repository") {
-    if (!options.key) throw new Error("缺少参数：--key");
+    if (!options.project) throw new Error("缺少参数：--project");
     if (!options.repo) throw new Error("缺少参数：--repo");
-    const result = await storeRepositoryByExecution(
+    const result = await storeRepositoryByProject(
       defaultConfigPath,
-      options.key,
+      options.project,
       options.repo,
     );
     console.log(JSON.stringify({ ok: true, ...result }, null, 2));

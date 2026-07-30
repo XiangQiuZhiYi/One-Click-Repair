@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "one-click-repair": {
+      "command": "node",
+      "args": [
+        "./dist/mcp-server.mjs"
+      ],
+      "cwd": ".",
+      "startup_timeout_sec": 15,
+      "tool_timeout_sec": 180
+    }
+  }
+}

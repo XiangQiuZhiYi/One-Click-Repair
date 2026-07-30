@@ -1,22 +1,17 @@
 #!/usr/bin/env node
 
-import { chmod, cp, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
 
 import {
   readVisibleValue,
   setupZentaoCredentials,
-} from "../skills/zentao-frontend-bugfix/scripts/lib/auth.mjs";
-import { loadConfig } from "../skills/zentao-frontend-bugfix/scripts/lib/config.mjs";
-
-const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const defaultSourceSkillPath = path.resolve(
-  scriptDirectory,
-  "../skills/zentao-frontend-bugfix",
-);
+} from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/auth.mjs";
+import { loadConfig } from "../plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/config.mjs";
+import { installLocalPlugin } from "./plugin-manager.mjs";
 
 async function exists(targetPath) {
   try {
@@ -33,34 +28,21 @@ export function resolveCodexHome(environment = process.env, homeDirectory = os.h
     : path.join(homeDirectory, ".codex");
 }
 
-export async function installSkill(options = {}) {
+export async function retireLegacySkill(options = {}) {
   const codexHome = options.codexHome || resolveCodexHome();
-  const sourceSkillPath = options.sourceSkillPath || defaultSourceSkillPath;
-  const skillsDirectory = path.join(codexHome, "skills");
-  const targetPath = path.join(skillsDirectory, "zentao-frontend-bugfix");
+  const targetPath = path.join(codexHome, "skills", "zentao-frontend-bugfix");
   const backupDirectory = path.join(codexHome, "skill-backups");
   const backupPath = path.join(
     backupDirectory,
     `zentao-frontend-bugfix-${options.backupSuffix || Date.now()}`,
   );
 
-  await mkdir(skillsDirectory, { recursive: true });
-  let backup;
-  if (await exists(targetPath)) {
-    await mkdir(backupDirectory, { recursive: true });
-    await rename(targetPath, backupPath);
-    backup = backupPath;
+  if (!(await exists(targetPath))) {
+    return { retired: false, targetPath, backupPath: undefined };
   }
-
-  try {
-    await cp(sourceSkillPath, targetPath, { recursive: true });
-  } catch (error) {
-    await rm(targetPath, { recursive: true, force: true });
-    if (backup) await rename(backup, targetPath);
-    throw error;
-  }
-
-  return { targetPath, backupPath: backup };
+  await mkdir(backupDirectory, { recursive: true });
+  await rename(targetPath, backupPath);
+  return { retired: true, targetPath, backupPath };
 }
 
 function defaultConfig(baseUrl, existing = {}) {
@@ -82,7 +64,7 @@ function defaultConfig(baseUrl, existing = {}) {
       accountFile: "./secrets/zentao-account",
     },
     outputDir: existing.outputDir || "./output",
-    repositoriesByExecution: existing.repositoriesByExecution ?? {},
+    repositoriesByProject: existing.repositoriesByProject ?? {},
     policy: {
       closedStatuses: ["closed", "已关闭"],
       autoFixCategories: [
@@ -142,10 +124,9 @@ export async function bootstrap(options = {}) {
     throw new Error("当前初始化器依赖 macOS 钥匙串，仅支持 macOS");
   }
   const codexHome = options.codexHome || resolveCodexHome();
-  const installed = await installSkill({
-    codexHome,
-    sourceSkillPath: options.sourceSkillPath,
-    backupSuffix: options.backupSuffix,
+  const installPlugin = options.installPlugin || installLocalPlugin;
+  const plugin = await installPlugin({
+    repositoryRoot: options.repositoryRoot,
   });
   const configured = await writeUserConfig({
     codexHome,
@@ -155,10 +136,14 @@ export async function bootstrap(options = {}) {
   const config = await loadConfig(configured.configPath);
   const setup = options.setupCredentials || setupZentaoCredentials;
   await setup(config);
+  const legacy = await retireLegacySkill({
+    codexHome,
+    backupSuffix: options.backupSuffix,
+  });
   return {
     codexHome,
-    skillPath: installed.targetPath,
-    previousSkillBackup: installed.backupPath,
+    plugin,
+    previousSkillBackup: legacy.backupPath,
     configPath: configured.configPath,
   };
 }
@@ -185,9 +170,9 @@ async function main() {
     JSON.stringify(
       {
         ok: true,
-        skillPath: result.skillPath,
+        plugin: result.plugin,
         configPath: result.configPath,
-        message: "初始化完成。请完全退出并重新打开 Codex，然后在聊天中输入“执行一键禅道”。",
+        message: "Plugin、禅道账号和本地配置均已初始化。请完全退出并重新打开 Codex，然后在聊天中输入“执行一键禅道”。",
       },
       null,
       2,
