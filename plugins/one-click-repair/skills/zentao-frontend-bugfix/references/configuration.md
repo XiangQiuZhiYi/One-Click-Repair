@@ -162,7 +162,7 @@ npm run bugfix -- doctor --config /absolute/path/config.json
 推荐在 Bug 描述或评论中添加：
 
 ```text
-问题代码仓库：sisreact
+问题代码仓库：example-react
 ```
 
 也兼容 `问题仓库`、`代码仓库`、`所属仓库`、`仓库名称`、`前端项目`、
@@ -173,16 +173,16 @@ npm run bugfix -- doctor --config /absolute/path/config.json
 ```json
 {
   "repositoriesByProject": {
-    "sisreact": "/absolute/path/to/current-workspace"
+    "example-react": "/absolute/path/to/current-workspace"
   }
 }
 ```
 
 仓库名比较时忽略大小写。精确匹配失败时，仅当简称对应唯一已保存仓库才自动复用，
-例如只有 `sisreact` 时可用 `react` 指代；存在多个候选则询问用户。后续识别到同一
+例如只有 `example-react` 时可用 `react` 指代；存在多个候选则询问用户。后续识别到同一
 仓库时直接复用目录。
 禅道所属执行只用于展示，不能作为仓库映射依据；同一执行下可能同时包含多个前端
-项目，例如 `sisreact` 和 `sisvue`。
+项目，例如 `example-react` 和 `example-vue`。
 
 仓库目录必须由用户提供，指向用户已经准备好的当前目录或 worktree。流程不自动搜索，
 也不执行 Git 命令。
@@ -214,9 +214,11 @@ typecheck 或 build。修改后由 Codex 重新阅读改动文件及其调用链
 `policy.autoFixCategories` 是允许自动修复的类型白名单。即使类型在白名单中，
 信息不足、高风险或没有仓库映射仍不会进入自动修复。
 
-进入 `AUTO_FIX` 也只表示进入“可直接修改”预览清单。只有用户看到预览并在聊天中
-用自然语言明确授权修改后，Codex 才能调用 `workspace_select_for_bug`。授权不要求
-固定口令；用户在同一消息中补充信息并授权时，若修改范围未扩大，无需二次确认。
+进入 `AUTO_FIX` 只表示进入“可直接修改”预览清单。用户看到预览后，针对具体 Bug
+明确确认修改或直接给出具体修改方案，都算完成授权。Codex 调用
+`workspace_select_for_bug` 时分别记录 `explicit-confirmation` 或
+`user-provided-solution`，随后立即修改，不再询问第二遍。`NEED_CONFIRM` 和
+`HUMAN_REQUIRED` 可由这次人工授权解锁；仓库或环境仍不可用的 `BLOCKED` 不可绕过。
 
 可通过 `policy.highRiskKeywords` 添加团队特有的高风险词。默认风险词始终生效。
 

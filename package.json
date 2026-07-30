@@ -1,6 +1,6 @@
 {
   "name": "one-click-repair",
-  "version": "0.7.1",
+  "version": "0.7.3",
   "description": "通过 Codex Plugin 一键拉取、分析并确认后修复禅道前端 Bug",
   "type": "module",
   "bin": {

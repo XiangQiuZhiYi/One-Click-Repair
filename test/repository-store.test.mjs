@@ -16,11 +16,11 @@ test("用户提供仓库后按评论中的所属项目持久化并可重复更�
     await mkdir(secondRepo);
     await writeFile(configPath, '{"repositoriesByProject":{}}\n', { mode: 0o600 });
 
-    await storeRepositoryByProject(configPath, "SisReact", firstRepo);
-    await storeRepositoryByProject(configPath, "sisreact", secondRepo);
+    await storeRepositoryByProject(configPath, "Example-React", firstRepo);
+    await storeRepositoryByProject(configPath, "example-react", secondRepo);
 
     const config = JSON.parse(await readFile(configPath, "utf8"));
-    assert.deepEqual(config.repositoriesByProject, { sisreact: secondRepo });
+    assert.deepEqual(config.repositoriesByProject, { "example-react": secondRepo });
     assert.equal((await stat(configPath)).mode & 0o777, 0o600);
   } finally {
     await rm(directory, { recursive: true, force: true });

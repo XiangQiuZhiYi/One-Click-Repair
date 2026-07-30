@@ -19,10 +19,10 @@ test("接入自检识别按所属项目保存的可用仓库", async () => {
       __configPath: path.join(directory, "config.json"),
       source: { type: "fixture", path: fixturePath },
       repositoriesByProject: {
-        sisreact: {
+        "example-react": {
           name: "web",
           repoPath,
-          projectName: "sisreact",
+          projectName: "example-react",
         },
       },
     });
@@ -30,7 +30,7 @@ test("接入自检识别按所属项目保存的可用仓库", async () => {
     assert.equal(result.ok, true);
     assert.ok(result.checks.some((item) => item.code === "SOURCE_FIXTURE" && item.level === "ok"));
     assert.ok(result.checks.some((item) => item.code === "REPOSITORY" && item.level === "ok"));
-    assert.ok(result.checks.some((item) => item.projectKey === "sisreact"));
+    assert.ok(result.checks.some((item) => item.projectKey === "example-react"));
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

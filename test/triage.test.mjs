@@ -15,33 +15,33 @@ import { triageBugs } from "../plugins/one-click-repair/skills/zentao-frontend-b
 test("所属项目解析兼容旧写法并以最新评论为准", () => {
   assert.equal(
     extractRepositoryProject([
-      { comment: "<p>属于项目：sisvue</p>" },
-      { comment: "<p>所属项目：sisreact</p>" },
+      { comment: "<p>属于项目：example-vue</p>" },
+      { comment: "<p>所属项目：example-react</p>" },
     ]),
-    "sisreact",
+    "example-react",
   );
 });
 
 test("从问题描述中的问题代码仓库字段识别仓库", () => {
   const bug = normalizeBug({
-    id: "47636",
-    title: "教师姓名显示分隔符",
+    id: "90001",
+    title: "副标题为空时仍显示分隔符",
     description:
-      "当前结果与期望结果不一致。\n问题代码仓库：sisreact\n代码分析：详情标题模板需要调整。",
-    steps: "进入课时统计页面查看教师详情。",
+      "当前结果与期望结果不一致。\n问题代码仓库：example-react\n代码分析：详情标题模板需要调整。",
+    steps: "进入详情页面查看标题。",
   });
-  assert.equal(bug.repositoryProject, "sisreact");
+  assert.equal(bug.repositoryProject, "example-react");
   assert.equal(bug.repositoryProjectSource, "description");
   assert.equal(bug.repositoryProjectLabel, "问题代码仓库");
 });
 
 test("评论中的仓库字段优先于描述中的仓库字段", () => {
   const bug = normalizeBug({
-    id: "47637",
-    description: "问题代码仓库：sisvue",
-    comments: [{ comment: "<p>代码仓库：sisreact</p>" }],
+    id: "90002",
+    description: "问题代码仓库：example-vue",
+    comments: [{ comment: "<p>代码仓库：example-react</p>" }],
   });
-  assert.equal(bug.repositoryProject, "sisreact");
+  assert.equal(bug.repositoryProject, "example-react");
   assert.equal(bug.repositoryProjectSource, "comment");
 });
 
@@ -49,17 +49,17 @@ test("仓库简称只有唯一匹配时才自动复用", () => {
   const unique = findRepository(
     { repositoryProject: "react" },
     {
-      sisreact: { name: "sisreact", repoPath: "/workspace/sisreact" },
-      sisvue: { name: "sisvue", repoPath: "/workspace/sisvue" },
+      "example-react": { name: "example-react", repoPath: "/workspace/example-react" },
+      "example-vue": { name: "example-vue", repoPath: "/workspace/example-vue" },
     },
   );
-  assert.equal(unique.projectKey, "sisreact");
+  assert.equal(unique.projectKey, "example-react");
   assert.equal(unique.matchType, "fuzzy");
 
   const ambiguous = findRepository(
     { repositoryProject: "react" },
     {
-      sisreact: { name: "sisreact", repoPath: "/workspace/sisreact" },
+      "example-react": { name: "example-react", repoPath: "/workspace/example-react" },
       adminreact: { name: "adminreact", repoPath: "/workspace/adminreact" },
     },
   );
@@ -159,8 +159,8 @@ test("同一所属执行下根据评论中的不同项目选择不同仓库", as
   try {
     const fixturePath = path.join(directory, "bugs.json");
     const configPath = path.join(directory, "config.json");
-    const reactRepo = path.join(directory, "sisreact");
-    const vueRepo = path.join(directory, "sisvue");
+    const reactRepo = path.join(directory, "example-react");
+    const vueRepo = path.join(directory, "example-vue");
     await mkdir(reactRepo);
     await mkdir(vueRepo);
     await writeFile(
@@ -176,7 +176,7 @@ test("同一所属执行下根据评论中的不同项目选择不同仓库", as
           status: "active",
           assignee: "me",
           severity: 3,
-          comments: [{ comment: "<p>所属项目：sisreact</p>" }],
+          comments: [{ comment: "<p>所属项目：example-react</p>" }],
         },
         {
           id: "202",
@@ -188,7 +188,7 @@ test("同一所属执行下根据评论中的不同项目选择不同仓库", as
           status: "active",
           assignee: "me",
           severity: 3,
-          comments: [{ comment: "<p>所属项目：sisvue</p>" }],
+          comments: [{ comment: "<p>所属项目：example-vue</p>" }],
         },
       ]),
     );
@@ -198,8 +198,8 @@ test("同一所属执行下根据评论中的不同项目选择不同仓库", as
         currentUser: "me",
         source: { type: "fixture", path: "./bugs.json" },
         repositoriesByProject: {
-          sisreact: reactRepo,
-          sisvue: vueRepo,
+          "example-react": reactRepo,
+          "example-vue": vueRepo,
         },
       }),
     );

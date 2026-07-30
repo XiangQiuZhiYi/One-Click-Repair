@@ -23381,15 +23381,23 @@ async function triageBugs(config2, options = {}) {
 import { access as access3 } from "node:fs/promises";
 import { constants as constants2 } from "node:fs";
 import path8 from "node:path";
+var AUTHORIZATION_BASES = /* @__PURE__ */ new Set([
+  "explicit-confirmation",
+  "user-provided-solution"
+]);
 async function selectCurrentWorkspace(config2, reportPath, bugId, options = {}) {
   if (options.confirmed !== true) {
     throw new Error("\u7528\u6237\u5C1A\u672A\u7528\u81EA\u7136\u8BED\u8A00\u660E\u786E\u6388\u6743\u4FEE\u6539\uFF0C\u4E0D\u80FD\u8FDB\u5165\u4EE3\u7801\u4FEE\u6539\u9636\u6BB5");
   }
+  const authorizationBasis = options.authorizationBasis || "explicit-confirmation";
+  if (!AUTHORIZATION_BASES.has(authorizationBasis)) {
+    throw new Error(`\u4E0D\u652F\u6301\u7684\u4FEE\u6539\u6388\u6743\u4F9D\u636E\uFF1A${authorizationBasis}`);
+  }
   const report = await readJson(reportPath);
   const item = report.items.find((candidate) => String(candidate.bug.id) === String(bugId));
   if (!item) throw new Error(`\u5206\u8BCA\u62A5\u544A\u4E2D\u627E\u4E0D\u5230 Bug\uFF1A${bugId}`);
-  if (item.triage.decision !== "AUTO_FIX") {
-    throw new Error(`Bug ${bugId} \u7684\u5904\u7406\u7ED3\u8BBA\u662F ${item.triage.decision}\uFF0C\u4E0D\u80FD\u51C6\u5907\u81EA\u52A8\u4FEE\u590D\u5DE5\u4F5C\u533A`);
+  if (item.triage.decision === "BLOCKED") {
+    throw new Error(`Bug ${bugId} \u4ECD\u5B58\u5728\u4ED3\u5E93\u6216\u73AF\u5883\u963B\u585E\uFF0C\u4E0D\u80FD\u8FDB\u5165\u4EE3\u7801\u4FEE\u6539\u9636\u6BB5`);
   }
   if (!item.repository?.repoPath) throw new Error(`Bug ${bugId} \u6CA1\u6709\u4ED3\u5E93\u8DEF\u5F84`);
   const repoPath = item.repository.repoPath;
@@ -23407,6 +23415,10 @@ async function selectCurrentWorkspace(config2, reportPath, bugId, options = {}) 
     workspaceMode: "current",
     workspacePath: repoPath,
     userConfirmed: true,
+    userAuthorization: {
+      basis: authorizationBasis,
+      overridesTriageDecision: item.triage.decision !== "AUTO_FIX"
+    },
     verificationMode: "code-logic-review"
   };
   const metadataPath = path8.join(
@@ -23420,7 +23432,7 @@ async function selectCurrentWorkspace(config2, reportPath, bugId, options = {}) 
 
 // plugins/one-click-repair/scripts/mcp-server.mjs
 var SERVER_NAME = "one-click-repair";
-var SERVER_VERSION = "0.7.1";
+var SERVER_VERSION = "0.7.3";
 var optionalConfigPathSchema = {
   config_path: string2().min(1).optional().describe("\u53EF\u9009\u7684\u7985\u9053\u914D\u7F6E\u7EDD\u5BF9\u8DEF\u5F84\uFF1B\u65E5\u5E38\u4F7F\u7528\u65F6\u4E0D\u8981\u4F20")
 };
@@ -23650,7 +23662,8 @@ async function selectWorkspaceForBug(input) {
   }
   const { config: config2 } = await resolveConfig(input.config_path);
   return selectCurrentWorkspace(config2, input.report_path, input.bug_id, {
-    confirmed: true
+    confirmed: true,
+    authorizationBasis: input.authorization_basis
   });
 }
 function createOneClickRepairServer() {
@@ -23660,7 +23673,7 @@ function createOneClickRepairServer() {
       version: SERVER_VERSION
     },
     {
-      instructions: "\u5148\u8C03\u7528 zentao_list_my_bugs \u62C9\u53D6\u5E76\u9010\u6761\u8BED\u4E49\u5206\u6790 Bug\uFF0C\u4ECE\u8BC4\u8BBA\u3001\u63CF\u8FF0\u548C\u590D\u73B0\u6B65\u9AA4\u4E2D\u7684\u4EE3\u7801\u4ED3\u5E93\u7EBF\u7D22\u8BC6\u522B\u524D\u7AEF\u9879\u76EE\uFF0C\u5E76\u6309\u9879\u76EE\u6620\u5C04\u672C\u5730\u4ED3\u5E93\uFF0C\u518D\u5411\u7528\u6237\u5C55\u793A\u53EF\u76F4\u63A5\u4FEE\u6539\u3001\u7B49\u5F85\u786E\u8BA4\u3001\u4EBA\u5DE5\u5904\u7406\u548C\u4ED3\u5E93\u5F85\u914D\u7F6E\u6E05\u5355\u3002\u7528\u6237\u53EF\u76F4\u63A5\u5728\u804A\u5929\u4E2D\u7EA0\u6B63\u4ED3\u5E93\u3001\u95EE\u9898\u7C7B\u578B\u548C\u786E\u8BA4\u72B6\u6001\uFF1B\u8C03\u7528 bug_apply_user_supplement \u5728\u672C\u5730\u5237\u65B0\u73B0\u6709\u62A5\u544A\uFF0C\u4E0D\u8981\u6C42\u56DE\u5199\u7985\u9053\uFF0C\u4E5F\u4E0D\u91CD\u65B0\u62C9\u53D6\u3002\u7528\u6237\u63D0\u4F9B\u4ED3\u5E93\u8DEF\u5F84\u540E\uFF0C\u8C03\u7528 repository_set_by_project \u5E76\u4F20\u5165\u672C\u6B21 report_path\u3002\u4FEE\u6539\u524D\u4ECD\u9700\u7528\u6237\u660E\u786E\u6388\u6743\uFF0C\u4F46\u5141\u8BB8\u81EA\u7136\u8BED\u8A00\u8868\u8FBE\uFF0C\u4E0D\u8981\u6C42\u56FA\u5B9A\u53E3\u4EE4\uFF1B\u5DF2\u9884\u89C8\u540E\uFF0C\u7528\u6237\u53EF\u5728\u540C\u4E00\u6D88\u606F\u91CC\u8865\u5145\u4FE1\u606F\u5E76\u6388\u6743\u4FEE\u6539\u3002\u4E0D\u5F97\u663E\u793A\u8D26\u53F7\u3001\u5BC6\u7801\u6216 Token\uFF0C\u4E0D\u64CD\u4F5C Git\uFF0C\u4E0D\u8FD0\u884C\u76EE\u6807\u9879\u76EE\u811A\u672C\u3002"
+      instructions: "\u5148\u8C03\u7528 zentao_list_my_bugs \u62C9\u53D6\u5E76\u9010\u6761\u8BED\u4E49\u5206\u6790 Bug\uFF0C\u4ECE\u8BC4\u8BBA\u3001\u63CF\u8FF0\u548C\u590D\u73B0\u6B65\u9AA4\u4E2D\u7684\u4EE3\u7801\u4ED3\u5E93\u7EBF\u7D22\u8BC6\u522B\u524D\u7AEF\u9879\u76EE\uFF0C\u5E76\u6309\u9879\u76EE\u6620\u5C04\u672C\u5730\u4ED3\u5E93\uFF0C\u518D\u5411\u7528\u6237\u5C55\u793A\u53EF\u76F4\u63A5\u4FEE\u6539\u3001\u7B49\u5F85\u786E\u8BA4\u3001\u4EBA\u5DE5\u5904\u7406\u548C\u4ED3\u5E93\u5F85\u914D\u7F6E\u6E05\u5355\u3002\u7528\u6237\u53EF\u76F4\u63A5\u5728\u804A\u5929\u4E2D\u7EA0\u6B63\u4ED3\u5E93\u3001\u95EE\u9898\u7C7B\u578B\u548C\u786E\u8BA4\u72B6\u6001\uFF1B\u8C03\u7528 bug_apply_user_supplement \u5728\u672C\u5730\u5237\u65B0\u73B0\u6709\u62A5\u544A\uFF0C\u4E0D\u8981\u6C42\u56DE\u5199\u7985\u9053\uFF0C\u4E5F\u4E0D\u91CD\u65B0\u62C9\u53D6\u3002\u7528\u6237\u63D0\u4F9B\u4ED3\u5E93\u8DEF\u5F84\u540E\uFF0C\u8C03\u7528 repository_set_by_project \u5E76\u4F20\u5165\u672C\u6B21 report_path\u3002\u7528\u6237\u770B\u8FC7\u9884\u89C8\u540E\uFF0C\u53EA\u8981\u9488\u5BF9\u5177\u4F53 Bug \u660E\u786E\u786E\u8BA4\u4FEE\u6539\uFF0C\u6216\u76F4\u63A5\u63D0\u51FA\u5177\u4F53\u4FEE\u6539\u65B9\u6848\uFF0C\u5C31\u5DF2\u7ECF\u5B8C\u6210\u6388\u6743\uFF1B\u7ACB\u5373\u8C03\u7528 workspace_select_for_bug\uFF0C\u6309\u60C5\u51B5\u4F20\u5165 explicit-confirmation \u6216 user-provided-solution\uFF0C\u7EDD\u4E0D\u80FD\u518D\u6B21\u7D22\u8981\u786E\u8BA4\u3002NEED_CONFIRM \u548C HUMAN_REQUIRED \u662F\u9ED8\u8BA4\u5206\u8BCA\u5EFA\u8BAE\uFF0C\u4E0D\u662F\u7528\u6237\u6388\u6743\u540E\u7684\u6B7B\u95E8\u7981\uFF1B\u53EA\u6709 BLOCKED \u4ECD\u7981\u6B62\u4FEE\u6539\u3002\u4E0D\u5F97\u663E\u793A\u8D26\u53F7\u3001\u5BC6\u7801\u6216 Token\uFF0C\u4E0D\u64CD\u4F5C Git\uFF0C\u4E0D\u8FD0\u884C\u76EE\u6807\u9879\u76EE\u811A\u672C\u3002"
     }
   );
   server.registerTool(
@@ -23789,12 +23802,13 @@ function createOneClickRepairServer() {
   server.registerTool(
     "workspace_select_for_bug",
     {
-      title: "\u786E\u8BA4\u540E\u9009\u62E9 Bug \u4FEE\u6539\u76EE\u5F55",
-      description: "\u5728\u7528\u6237\u5DF2\u770B\u5230\u9884\u89C8\u5E76\u7528\u81EA\u7136\u8BED\u8A00\u660E\u786E\u6388\u6743\u4FEE\u6539\u540E\uFF0C\u6821\u9A8C\u62A5\u544A\u4E2D\u7684 Bug \u5E76\u8FD4\u56DE\u5176\u672C\u5730\u5DE5\u4F5C\u76EE\u5F55\uFF1B\u4E0D\u8981\u6C42\u56FA\u5B9A\u53E3\u4EE4\uFF0C\u672C\u5DE5\u5177\u4E0D\u4FEE\u6539\u4EE3\u7801\u3002",
+      title: "\u6388\u6743\u540E\u9009\u62E9 Bug \u4FEE\u6539\u76EE\u5F55",
+      description: "\u7528\u6237\u770B\u8FC7\u9884\u89C8\u540E\uFF0C\u53EA\u8981\u9488\u5BF9\u5177\u4F53 Bug \u660E\u786E\u786E\u8BA4\u4FEE\u6539\uFF0C\u6216\u76F4\u63A5\u63D0\u51FA\u5177\u4F53\u4FEE\u6539\u65B9\u6848\uFF0C\u5C31\u89C6\u4E3A\u5DF2\u7ECF\u6388\u6743\u3002AUTO_FIX\u3001NEED_CONFIRM\u3001HUMAN_REQUIRED \u5747\u53EF\u5728\u6388\u6743\u540E\u8FD4\u56DE\u672C\u5730\u5DE5\u4F5C\u76EE\u5F55\uFF1BBLOCKED \u4ECD\u4E0D\u53EF\u7ED5\u8FC7\u3002\u672C\u5DE5\u5177\u4E0D\u4FEE\u6539\u4EE3\u7801\u3002",
       inputSchema: {
         bug_id: string2().min(1).describe("\u672C\u6B21\u6700\u7EC8\u6E05\u5355\u4E2D\u7684 Bug ID"),
         report_path: string2().min(1).describe("zentao_list_my_bugs \u8FD4\u56DE\u7684\u62A5\u544A\u7EDD\u5BF9\u8DEF\u5F84"),
-        confirmed: literal(true).describe("\u7528\u6237\u662F\u5426\u5DF2\u7528\u81EA\u7136\u8BED\u8A00\u660E\u786E\u6388\u6743\u4FEE\u6539"),
+        confirmed: literal(true).describe("\u7528\u6237\u662F\u5426\u5DF2\u901A\u8FC7\u786E\u8BA4\u6216\u5177\u4F53\u4FEE\u6539\u65B9\u6848\u660E\u786E\u6388\u6743"),
+        authorization_basis: _enum(["explicit-confirmation", "user-provided-solution"]).describe("\u6388\u6743\u4F9D\u636E\uFF1A\u7528\u6237\u660E\u786E\u8981\u6C42\u4FEE\u6539\uFF0C\u6216\u7528\u6237\u76F4\u63A5\u7ED9\u51FA\u4E86\u5177\u4F53\u4FEE\u6539\u65B9\u6848"),
         ...optionalConfigPathSchema
       },
       annotations: {

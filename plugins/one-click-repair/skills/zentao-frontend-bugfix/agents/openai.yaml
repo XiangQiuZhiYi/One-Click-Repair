@@ -1,7 +1,7 @@
 interface:
   display_name: "禅道前端 Bug 分诊与修复"
-  short_description: "灵活识别代码仓库，支持聊天补充并在授权后修复"
-  default_prompt: "使用 $zentao-frontend-bugfix 拉取并分析我的禅道前端 Bug，允许我在聊天中补充纠正，并在我明确授权后修改。"
+  short_description: "灵活识别仓库，用户给出方案或确认后立即修复"
+  default_prompt: "使用 $zentao-frontend-bugfix 拉取并分析我的禅道前端 Bug；当我针对具体 Bug 给出修改方案或确认修改时直接处理，不要再次确认。"
 dependencies:
   tools:
     - type: "mcp"

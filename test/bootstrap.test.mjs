@@ -54,7 +54,7 @@ test("用户配置保存在 Codex 目录并保留已有项目仓库映射", asyn
       baseUrl: "https://zentao.example.com/zentao/",
     });
     const initial = JSON.parse(await readFile(first.configPath, "utf8"));
-    initial.repositoriesByProject.sisreact = "/workspace/sisreact";
+    initial.repositoriesByProject["example-react"] = "/workspace/example-react";
     await writeFile(first.configPath, `${JSON.stringify(initial, null, 2)}\n`);
 
     const second = await writeUserConfig({
@@ -63,7 +63,7 @@ test("用户配置保存在 Codex 目录并保留已有项目仓库映射", asyn
     });
     const config = JSON.parse(await readFile(second.configPath, "utf8"));
     assert.equal(config.source.baseUrl, "https://zentao.example.com/zentao");
-    assert.equal(config.repositoriesByProject.sisreact, "/workspace/sisreact");
+    assert.equal(config.repositoriesByProject["example-react"], "/workspace/example-react");
     assert.equal((await stat(second.configPath)).mode & 0o777, 0o600);
   } finally {
     await rm(directory, { recursive: true, force: true });

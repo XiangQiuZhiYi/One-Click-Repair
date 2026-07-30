@@ -56,14 +56,14 @@ test("用户可在聊天中补充仓库和确认状态并本地刷新报告", as
   try {
     const configFile = path.join(directory, "config.json");
     const fixtureFile = path.join(directory, "bugs.json");
-    const repositoryPath = path.join(directory, "sisreact");
+    const repositoryPath = path.join(directory, "example-react");
     await mkdir(repositoryPath);
     await writeFile(path.join(repositoryPath, "package.json"), "{}\n");
     await writeFile(
       fixtureFile,
       JSON.stringify([
         {
-          id: "47636",
+          id: "90001",
           title: "教师姓名分隔符显示错误",
           description: "详情标题当前多显示分隔符，预期只显示实际存在的名称。",
           steps: "进入课时统计页面并打开教师详情。",
@@ -80,7 +80,7 @@ test("用户可在聊天中补充仓库和确认状态并本地刷新报告", as
         source: { type: "fixture", path: "./bugs.json" },
         outputDir: "./output",
         repositoriesByProject: {
-          sisreact: repositoryPath,
+          "example-react": repositoryPath,
         },
       }),
     );
@@ -90,7 +90,7 @@ test("用户可在聊天中补充仓库和确认状态并本地刷新报告", as
     const updated = await applyBugUserSupplement({
       config_path: configFile,
       report_path: initial.reportPath,
-      bug_id: "47636",
+      bug_id: "90001",
       repository_project: "react",
       problem_type: "逻辑",
       needs_confirmation: false,
@@ -100,15 +100,16 @@ test("用户可在聊天中补充仓库和确认状态并本地刷新报告", as
     assert.equal(updated.zentaoRequested, false);
     assert.equal(updated.item.bug.repositoryProject, "react");
     assert.equal(updated.item.bug.repositoryProjectSource, "chat");
-    assert.equal(updated.item.repository.projectKey, "sisreact");
+    assert.equal(updated.item.repository.projectKey, "example-react");
     assert.equal(updated.item.repository.matchType, "fuzzy");
     assert.equal(updated.item.triage.decision, "AUTO_FIX");
 
     const selected = await selectWorkspaceForBug({
       config_path: configFile,
-      bug_id: "47636",
+      bug_id: "90001",
       report_path: initial.reportPath,
       confirmed: true,
+      authorization_basis: "user-provided-solution",
     });
     assert.equal(selected.metadata.workspacePath, repositoryPath);
   } finally {
@@ -163,7 +164,7 @@ test("保存仓库映射后只基于现有报告本地刷新，不重新读取 B
   try {
     const configFile = path.join(directory, "config.json");
     const fixtureFile = path.join(directory, "bugs.json");
-    const repositoryPath = path.join(directory, "sisreact");
+    const repositoryPath = path.join(directory, "example-react");
     await mkdir(repositoryPath);
     await writeFile(path.join(repositoryPath, "package.json"), "{}\n");
     await writeFile(
@@ -180,7 +181,7 @@ test("保存仓库映射后只基于现有报告本地刷新，不重新读取 B
           comments: [
             {
               comment:
-                "<p>所属项目：sisreact</p><p>状态：直接处理</p>",
+                "<p>所属项目：example-react</p><p>状态：直接处理</p>",
             },
           ],
         },
@@ -202,7 +203,7 @@ test("保存仓库映射后只基于现有报告本地刷新，不重新读取 B
     await rm(fixtureFile);
     const saved = await setRepositoryByProject({
       config_path: configFile,
-      project_name: "sisreact",
+      project_name: "example-react",
       repository_path: repositoryPath,
       report_path: initial.reportPath,
     });
@@ -227,6 +228,7 @@ test("保存仓库映射后只基于现有报告本地刷新，不重新读取 B
       bug_id: "501",
       report_path: initial.reportPath,
       confirmed: true,
+      authorization_basis: "explicit-confirmation",
     });
     assert.equal(selected.metadata.workspacePath, repositoryPath);
   } finally {
