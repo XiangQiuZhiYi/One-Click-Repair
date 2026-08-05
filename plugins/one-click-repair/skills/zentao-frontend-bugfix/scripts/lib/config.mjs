@@ -102,6 +102,17 @@ export async function loadConfig(configPath) {
   if (raw.source.type === "zentao-v1") {
     assertString(raw.source.baseUrl, "source.baseUrl");
     if (
+      raw.source.personalBugListMode != null &&
+      !["assigned-to-me", "product-scan"].includes(raw.source.personalBugListMode)
+    ) {
+      throw new Error(
+        "source.personalBugListMode 必须是 assigned-to-me 或 product-scan",
+      );
+    }
+    if (raw.source.personalBugListPath != null) {
+      assertString(raw.source.personalBugListPath, "source.personalBugListPath");
+    }
+    if (
       raw.source.tokenEnv != null &&
       !/^[A-Z_][A-Z0-9_]*$/.test(raw.source.tokenEnv)
     ) {
@@ -128,10 +139,22 @@ export async function loadConfig(configPath) {
       ["requestTimeoutMs", 1],
       ["requestRetries", 0],
       ["retryDelayMs", 0],
+      ["personalBugPageSize", 1],
+      ["maxPersonalBugPages", 1],
     ]) {
       validateNumber(raw.source[field], `source.${field}`, { minimum, integer: true });
     }
+    if (raw.source.personalBugPageSize > 1_000) {
+      throw new Error("source.personalBugPageSize 不能大于 1000");
+    }
   }
+  if (raw.source.attachmentUrlTemplate != null) {
+    assertString(raw.source.attachmentUrlTemplate, "source.attachmentUrlTemplate");
+  }
+  validateNumber(raw.source.maxAttachmentBytes, "source.maxAttachmentBytes", {
+    minimum: 1,
+    integer: true,
+  });
 
   const repositoriesByProject = raw.repositoriesByProject ?? {};
   if (
@@ -183,6 +206,22 @@ export async function loadConfig(configPath) {
       path:
         raw.source.type === "fixture" ? resolvePath(configDir, raw.source.path) : raw.source.path,
       tokenEnv: raw.source.type === "zentao-v1" ? raw.source.tokenEnv || "ZENTAO_TOKEN" : undefined,
+      personalBugListMode:
+        raw.source.type === "zentao-v1"
+          ? raw.source.personalBugListMode || "assigned-to-me"
+          : undefined,
+      personalBugListPath:
+        raw.source.type === "zentao-v1"
+          ? raw.source.personalBugListPath || "my-work-bug-assignedTo--id_desc.html"
+          : undefined,
+      personalBugPageSize:
+        raw.source.type === "zentao-v1"
+          ? raw.source.personalBugPageSize || 100
+          : undefined,
+      maxPersonalBugPages:
+        raw.source.type === "zentao-v1"
+          ? raw.source.maxPersonalBugPages || 20
+          : undefined,
       tokenFile:
         raw.source.type === "zentao-v1"
           ? resolvePath(configDir, raw.source.tokenFile || ".bugfix-secrets/zentao-token")

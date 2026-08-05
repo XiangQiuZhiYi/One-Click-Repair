@@ -94,17 +94,22 @@ function detectUserHandling(text) {
   return undefined;
 }
 
-export function detectCategory(bug) {
+export function detectCategory(bug, aiAnalysis) {
   const supplementedType = bug.userSupplement?.problemType;
+  const semanticType = supplementedType || aiAnalysis?.problemType;
   const supplementedCategory = {
     逻辑: "STATE_LOGIC",
     样式: "STYLE",
     需求: "REQUIREMENT",
-  }[supplementedType];
+  }[semanticType];
   if (supplementedCategory) {
     return {
       category: supplementedCategory,
-      hits: [`用户补充类型：${supplementedType}`],
+      hits: [
+        supplementedType
+          ? `用户补充类型：${supplementedType}`
+          : `Codex 语义分析类型：${semanticType}`,
+      ],
       confidence: 1,
     };
   }
@@ -136,8 +141,8 @@ function isDetailedEnough(bug, category) {
   return detailLength >= 30 && bug.steps.length >= 8;
 }
 
-export function classifyBug(bug, repository, policy) {
-  const detected = detectCategory(bug);
+export function classifyBug(bug, repository, policy, aiAnalysis) {
+  const detected = detectCategory(bug, aiAnalysis);
   const text = contextText(bug);
   const userHandling = detectUserHandling(text);
   const riskKeywords = [...DEFAULT_HIGH_RISK_KEYWORDS, ...(policy.highRiskKeywords ?? [])].filter(
@@ -151,7 +156,11 @@ export function classifyBug(bug, repository, policy) {
   const questions = [];
   let decision;
 
-  if (!repository) {
+  if (bug.fetchStatus === "detail_failed") {
+    decision = "BLOCKED";
+    reasons.push("禅道详情获取失败，当前仅保留列表基础信息");
+    questions.push("可重试该 Bug 的详情获取；详情成功前不能进入修改阶段。");
+  } else if (!repository) {
     decision = "BLOCKED";
     if (!bug.repositoryProject) {
       reasons.push("禅道详情中未识别到代码仓库线索");
@@ -177,6 +186,9 @@ export function classifyBug(bug, repository, policy) {
   ) {
     decision = "HUMAN_REQUIRED";
     reasons.push(`严重程度 ${bug.severity} 达到强制人工复核阈值`);
+  } else if (aiAnalysis?.risk === "high") {
+    decision = "HUMAN_REQUIRED";
+    reasons.push("Codex 语义分析将该 Bug 标记为高风险");
   } else if (bug.userSupplement?.needsConfirmation === false) {
     decision = "AUTO_FIX";
     reasons.push("用户已在聊天中补充关键信息，并明确说明无需继续确认");
@@ -185,6 +197,12 @@ export function classifyBug(bug, repository, policy) {
     reasons.push("用户在聊天中标记为仍需确认");
     questions.push(
       bug.userSupplement?.note || "请确认会改变实现方向的业务规则或交互预期。",
+    );
+  } else if (aiAnalysis?.needsConfirmation === true) {
+    decision = "NEED_CONFIRM";
+    reasons.push("Codex 语义分析发现会改变实现方向的确认点");
+    questions.push(
+      aiAnalysis.confirmationQuestion || "请确认会改变实现方向的业务规则或交互预期。",
     );
   } else if (userHandling === "NEED_CONFIRM") {
     decision = "NEED_CONFIRM";

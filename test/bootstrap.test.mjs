@@ -63,6 +63,7 @@ test("用户配置保存在 Codex 目录并保留已有项目仓库映射", asyn
     });
     const config = JSON.parse(await readFile(second.configPath, "utf8"));
     assert.equal(config.source.baseUrl, "https://zentao.example.com/zentao");
+    assert.equal(config.source.personalBugListMode, "assigned-to-me");
     assert.equal(config.repositoriesByProject["example-react"], "/workspace/example-react");
     assert.equal((await stat(second.configPath)).mode & 0o777, 0o600);
   } finally {

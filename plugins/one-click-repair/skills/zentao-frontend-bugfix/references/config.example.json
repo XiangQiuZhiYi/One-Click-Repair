@@ -2,7 +2,8 @@
   "currentUser": "your-zentao-account",
   "source": {
     "type": "fixture",
-    "path": "./bugs.fixture.json"
+    "path": "./bugs.fixture.json",
+    "maxAttachmentBytes": 5242880
   },
   "outputDir": "../../../.bugfix-output",
   "repositoriesByProject": {

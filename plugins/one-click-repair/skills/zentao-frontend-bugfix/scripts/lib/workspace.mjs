@@ -1,7 +1,8 @@
 import { access } from "node:fs/promises";
 import { constants } from "node:fs";
 import path from "node:path";
-import { readJson, slugify, writeJson } from "./utils.mjs";
+import { readTriageReport } from "./report.mjs";
+import { slugify, writeJson } from "./utils.mjs";
 
 const AUTHORIZATION_BASES = new Set([
   "explicit-confirmation",
@@ -17,7 +18,7 @@ export async function selectCurrentWorkspace(config, reportPath, bugId, options 
   if (!AUTHORIZATION_BASES.has(authorizationBasis)) {
     throw new Error(`不支持的修改授权依据：${authorizationBasis}`);
   }
-  const report = await readJson(reportPath);
+  const report = await readTriageReport(reportPath);
   const item = report.items.find((candidate) => String(candidate.bug.id) === String(bugId));
   if (!item) throw new Error(`分诊报告中找不到 Bug：${bugId}`);
   if (item.triage.decision === "BLOCKED") {

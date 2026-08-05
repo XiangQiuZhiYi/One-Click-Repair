@@ -59,13 +59,21 @@ async function main() {
   }
 
   async function collectTriage(config) {
-    const items = await triageBugs(config);
-    const { report, jsonPath, markdownPath } = await writeTriageReport(config, items);
+    const items = await triageBugs(config, {
+      onProgress: (message) => process.stderr.write(`${message}\n`),
+    });
+    const { report, jsonPath, markdownPath } = await writeTriageReport(config, items, {
+      sourceErrors: items.sourceErrors,
+      requestSummary: items.requestSummary,
+      timings: items.timings,
+    });
     return {
       ok: true,
       report: jsonPath,
       summary: markdownPath,
       stats: report.stats,
+      requestSummary: report.requestSummary,
+      timings: report.timings,
     };
   }
 

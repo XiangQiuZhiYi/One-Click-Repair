@@ -3229,8 +3229,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path10) {
-      let input = path10;
+    function removeDotSegments(path11) {
+      let input = path11;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3482,8 +3482,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path10, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path10 && path10 !== "/" ? path10 : void 0;
+        const [path11, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path11 && path11 !== "/" ? path11 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -6896,8 +6896,8 @@ var require_dist = __commonJS({
 });
 
 // plugins/one-click-repair/scripts/mcp-server.mjs
-import { readFile as readFile4 } from "node:fs/promises";
-import path9 from "node:path";
+import { readFile as readFile5 } from "node:fs/promises";
+import path10 from "node:path";
 import { pathToFileURL } from "node:url";
 
 // node_modules/zod/v3/helpers/util.js
@@ -7259,8 +7259,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path10, errorMaps, issueData } = params;
-  const fullPath = [...path10, ...issueData.path || []];
+  const { data, path: path11, errorMaps, issueData } = params;
+  const fullPath = [...path11, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -7375,11 +7375,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path10, key) {
+  constructor(parent, value, path11, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path10;
+    this._path = path11;
     this._key = key;
   }
   get path() {
@@ -11016,10 +11016,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path10) {
-  if (!path10)
+function getElementAtPath(obj, path11) {
+  if (!path11)
     return obj;
-  return path10.reduce((acc, key) => acc?.[key], obj);
+  return path11.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -11428,11 +11428,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path10, issues) {
+function prefixIssues(path11, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path10);
+    iss.path.unshift(path11);
     return iss;
   });
 }
@@ -11579,16 +11579,16 @@ function flattenError(error2, mapper = (issue2) => issue2.message) {
 }
 function formatError(error2, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error3, path10 = []) => {
+  const processError = (error3, path11 = []) => {
     for (const issue2 of error3.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path10, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path11, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path10, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path11, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path10, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path11, ...issue2.path]);
       } else {
-        const fullpath = [...path10, ...issue2.path];
+        const fullpath = [...path11, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -15387,11 +15387,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path10) {
-  if (path10.length === 0) {
+function getDotPath(path11) {
+  if (path11.length === 0) {
     return "object root";
   }
-  return path10.reduce((acc, seg, index) => {
+  return path11.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -21891,11 +21891,14 @@ var StdioServerTransport = class {
   }
 };
 
-// plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/auth.mjs
-import { chmod, mkdir as mkdir2, readFile as readFile3, writeFile as writeFile2 } from "node:fs/promises";
+// plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/attachment.mjs
 import path2 from "node:path";
-import process5 from "node:process";
-import { createInterface } from "node:readline/promises";
+
+// plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/source.mjs
+import { readFile as readFile3 } from "node:fs/promises";
+
+// plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/personal-bugs.mjs
+import { readFile } from "node:fs/promises";
 
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/keychain.mjs
 import { spawn } from "node:child_process";
@@ -21964,24 +21967,341 @@ async function readKeychainPassword({ baseUrl, account }, options = {}) {
   return password;
 }
 
-// plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/source.mjs
-import { readFile as readFile2 } from "node:fs/promises";
+// plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/personal-bugs.mjs
+var DEFAULT_LIST_PATH = "my-work-bug-assignedTo--id_desc.html";
+function webBaseUrl(baseUrl) {
+  return String(baseUrl || "").replace(/\/+$/u, "").replace(/\/api\.php\/v1$/u, "");
+}
+function decodeHtmlEntities(value) {
+  return String(value || "").replace(/&quot;/giu, '"').replace(/&apos;|&#0*39;|&#x0*27;/giu, "'").replace(/&lt;/giu, "<").replace(/&gt;/giu, ">").replace(/&amp;/giu, "&").replace(/&#(\d+);/gu, (_, code) => String.fromCodePoint(Number(code))).replace(/&#x([0-9a-f]+);/giu, (_, code) => String.fromCodePoint(Number.parseInt(code, 16)));
+}
+function sameOriginUrl(value, base, label) {
+  const url = new URL(value, base);
+  if (url.origin !== new URL(base).origin) {
+    throw new Error(`${label}\u4E0D\u662F\u7985\u9053\u540C\u6E90\u5730\u5740\uFF0C\u5DF2\u62D2\u7EDD\u8BBF\u95EE`);
+  }
+  return url;
+}
+function extractAttribute(html, attributeName) {
+  const marker = `${attributeName}=`;
+  const start = html.toLocaleLowerCase().indexOf(marker.toLocaleLowerCase());
+  if (start < 0) return void 0;
+  const quoteIndex = start + marker.length;
+  const quote = html[quoteIndex];
+  if (quote !== '"' && quote !== "'") return void 0;
+  const end = html.indexOf(quote, quoteIndex + 1);
+  if (end < 0) return void 0;
+  return decodeHtmlEntities(html.slice(quoteIndex + 1, end));
+}
+function findBalancedJsonArray(source, start) {
+  let depth = 0;
+  let quote;
+  let escaped = false;
+  for (let index = start; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === quote) quote = void 0;
+      continue;
+    }
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+    if (character === "[") depth += 1;
+    if (character === "]") {
+      depth -= 1;
+      if (depth === 0) return source.slice(start, index + 1);
+    }
+  }
+  throw new Error("\u7985\u9053\u4E2A\u4EBA Bug \u5217\u8868\u4E2D\u7684 data \u6570\u7EC4\u4E0D\u5B8C\u6574");
+}
+function parseDataArray(configText) {
+  const pattern = /(?:^|[,{])\s*["']?data["']?\s*:\s*(?=\[)/gu;
+  for (const match of configText.matchAll(pattern)) {
+    const start = match.index + match[0].length;
+    try {
+      const value = JSON.parse(findBalancedJsonArray(configText, start));
+      if (Array.isArray(value)) return value;
+    } catch {
+    }
+  }
+  throw new Error("\u7985\u9053\u4E2A\u4EBA Bug \u9875\u9762\u4E2D\u6CA1\u6709\u53EF\u5B89\u5168\u8BFB\u53D6\u7684 data \u6570\u7EC4");
+}
+function parseNumberProperty(configText, name) {
+  const match = configText.match(new RegExp(`["']?${name}["']?\\s*:\\s*([0-9]+)`, "u"));
+  return match ? Number(match[1]) : void 0;
+}
+function parseStringProperty(configText, name) {
+  const match = configText.match(new RegExp(`["']?${name}["']?\\s*:\\s*(["'])(.*?)\\1`, "u"));
+  if (!match) return void 0;
+  if (match[1] === '"') {
+    try {
+      return JSON.parse(`"${match[2]}"`);
+    } catch {
+      return match[2];
+    }
+  }
+  return match[2].replace(/\\'/gu, "'").replace(/\\\\/gu, "\\");
+}
+function parsePersonalBugPage(html) {
+  const componentConfig = extractAttribute(html, "zui-create-dtable");
+  if (!componentConfig) {
+    throw new Error("\u7985\u9053\u4E2A\u4EBA Bug \u9875\u9762\u7F3A\u5C11\u5217\u8868\u7EC4\u4EF6\uFF0C\u767B\u5F55\u53EF\u80FD\u5DF2\u5931\u6548\u6216\u9875\u9762\u7ED3\u6784\u4E0D\u517C\u5BB9");
+  }
+  return {
+    items: parseDataArray(componentConfig),
+    total: parseNumberProperty(componentConfig, "recTotal"),
+    pageSize: parseNumberProperty(componentConfig, "recPerPage"),
+    page: parseNumberProperty(componentConfig, "page"),
+    linkCreator: parseStringProperty(componentConfig, "linkCreator")
+  };
+}
+function collectCookies(response, cookies) {
+  const values = typeof response.headers.getSetCookie === "function" ? response.headers.getSetCookie() : [response.headers.get("set-cookie")].filter(Boolean);
+  for (const value of values) {
+    const pair = String(value).split(";", 1)[0];
+    const separator = pair.indexOf("=");
+    if (separator > 0) cookies.set(pair.slice(0, separator), pair.slice(separator + 1));
+  }
+}
+function cookieHeader(cookies) {
+  return [...cookies].map(([name, value]) => `${name}=${value}`).join("; ");
+}
+async function fetchText(url, init, runtime) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), runtime.timeoutMs);
+  try {
+    const response = await runtime.fetchImplementation(url, {
+      ...init,
+      redirect: "manual",
+      signal: controller.signal
+    });
+    collectCookies(response, runtime.cookies);
+    return { response, text: await response.text() };
+  } catch (error2) {
+    if (error2.name === "AbortError") {
+      const timeoutError = new Error(`\u7985\u9053\u4E2A\u4EBA Bug \u5217\u8868\u8BF7\u6C42\u8D85\u65F6\uFF08${runtime.timeoutMs}ms\uFF09`);
+      timeoutError.code = "REQUEST_TIMEOUT";
+      throw timeoutError;
+    }
+    throw error2;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+function parseLoginForm(html, pageUrl) {
+  const form = html.match(/<form\b[^>]*\baction=["']([^"']+)["'][^>]*>/iu);
+  if (!form) throw new Error("\u7985\u9053\u767B\u5F55\u9875\u7F3A\u5C11\u53EF\u8BC6\u522B\u7684\u767B\u5F55\u8868\u5355\uFF0C\u8BF7\u91CD\u65B0\u6267\u884C setup \u6216\u914D\u7F6E\u517C\u5BB9\u6A21\u5F0F");
+  const inputs = [...html.matchAll(/<input\b[^>]*>/giu)].map((match) => match[0]);
+  const names = new Set(inputs.flatMap((input) => {
+    const name = input.match(/\bname=["']([^"']+)["']/iu)?.[1];
+    return name ? [name] : [];
+  }));
+  if ([...names].some((name) => /captcha|verify|code/iu.test(name))) {
+    throw new Error("\u7985\u9053\u767B\u5F55\u542F\u7528\u4E86\u9A8C\u8BC1\u7801\uFF0C\u65E0\u6CD5\u8FDB\u884C\u65E0\u4EA4\u4E92\u81EA\u52A8\u767B\u5F55");
+  }
+  if (!names.has("account") || !names.has("password")) {
+    throw new Error("\u7985\u9053\u767B\u5F55\u8868\u5355\u5B57\u6BB5\u4E0D\u517C\u5BB9\uFF0C\u65E0\u6CD5\u5B89\u5168\u81EA\u52A8\u767B\u5F55");
+  }
+  return sameOriginUrl(decodeHtmlEntities(form[1]), pageUrl, "\u7985\u9053\u767B\u5F55\u8868\u5355");
+}
+async function readAccount(config2) {
+  if (config2.currentUser?.trim()) return config2.currentUser.trim();
+  if (config2.source.accountFile) {
+    try {
+      const account = (await readFile(config2.source.accountFile, "utf8")).trim();
+      if (account) return account;
+    } catch {
+    }
+  }
+  const error2 = new Error("\u5C1A\u672A\u521D\u59CB\u5316\u7985\u9053\u8D26\u53F7\uFF0C\u8BF7\u5148\u8FD0\u884C npx one-click-repair@latest setup");
+  error2.code = "ZENTAO_SETUP_REQUIRED";
+  throw error2;
+}
+async function openAuthenticatedList(targetUrl, account, config2, runtime) {
+  const startedAt = Date.now();
+  runtime.progress?.("\u6B63\u5728\u5EFA\u7ACB\u7985\u9053\u4E2A\u4EBA\u4F1A\u8BDD");
+  let result = await fetchText(targetUrl, { headers: {} }, runtime);
+  try {
+    const parsed2 = parsePersonalBugPage(result.text);
+    return { parsed: parsed2, authenticationMs: Date.now() - startedAt, webLoginRequests: 0 };
+  } catch {
+  }
+  const location = result.response.headers.get("location");
+  if (!location) {
+    throw new Error("\u7985\u9053\u4E2A\u4EBA Bug \u9875\u9762\u672A\u8FD4\u56DE\u5217\u8868\u6216\u767B\u5F55\u5165\u53E3\uFF0C\u8BF7\u91CD\u65B0\u6267\u884C setup");
+  }
+  const loginUrl = sameOriginUrl(location, targetUrl, "\u7985\u9053\u767B\u5F55\u8DF3\u8F6C");
+  const loginPage = await fetchText(loginUrl, {
+    headers: runtime.cookies.size ? { Cookie: cookieHeader(runtime.cookies) } : {}
+  }, runtime);
+  const formUrl = parseLoginForm(loginPage.text, loginUrl);
+  const password = await runtime.readPassword(
+    { baseUrl: config2.source.baseUrl, account },
+    runtime.keychainOptions
+  );
+  const body = new URLSearchParams({
+    account,
+    password,
+    keepLogin: "1",
+    referer: targetUrl.href
+  });
+  const loginResponse = await fetchText(formUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      ...runtime.cookies.size ? { Cookie: cookieHeader(runtime.cookies) } : {}
+    },
+    body
+  }, runtime);
+  if (loginResponse.response.status === 401 || loginResponse.response.status === 403) {
+    const error2 = new Error("\u94A5\u5319\u4E32\u4E2D\u7684\u7985\u9053\u8D26\u53F7\u6216\u5BC6\u7801\u5DF2\u5931\u6548\uFF0C\u8BF7\u91CD\u65B0\u8FD0\u884C setup");
+    error2.code = "ZENTAO_CREDENTIAL_INVALID";
+    throw error2;
+  }
+  result = await fetchText(targetUrl, {
+    headers: runtime.cookies.size ? { Cookie: cookieHeader(runtime.cookies) } : {}
+  }, runtime);
+  let parsed;
+  try {
+    parsed = parsePersonalBugPage(result.text);
+  } catch (cause) {
+    const error2 = new Error("\u7985\u9053\u767B\u5F55\u540E\u4ECD\u65E0\u6CD5\u8BFB\u53D6\u4E2A\u4EBA Bug \u5217\u8868\uFF0C\u8BF7\u68C0\u67E5\u8D26\u53F7\u5BC6\u7801\u6216\u9875\u9762\u517C\u5BB9\u6027", { cause });
+    error2.code = "ZENTAO_CREDENTIAL_INVALID";
+    throw error2;
+  }
+  return { parsed, authenticationMs: Date.now() - startedAt, webLoginRequests: 4 };
+}
+function pageUrlFromTemplate(linkCreator, targetUrl, pageSize, page) {
+  if (!linkCreator) return void 0;
+  const rendered = linkCreator.replaceAll("{recPerPage}", String(pageSize)).replaceAll("{page}", String(page));
+  return sameOriginUrl(rendered, targetUrl, "\u7985\u9053\u4E2A\u4EBA Bug \u5206\u9875\u94FE\u63A5");
+}
+async function loadPersonalBugList(config2, options = {}) {
+  const source = config2.source;
+  const account = await readAccount(config2);
+  config2.currentUser = account;
+  const baseUrl = webBaseUrl(source.baseUrl);
+  const targetUrl = sameOriginUrl(
+    source.personalBugListPath || DEFAULT_LIST_PATH,
+    `${baseUrl}/`,
+    "\u7985\u9053\u4E2A\u4EBA Bug \u5217\u8868"
+  );
+  const runtime = {
+    fetchImplementation: options.fetchImplementation ?? fetch,
+    readPassword: options.readKeychainPassword ?? readKeychainPassword,
+    keychainOptions: options.keychainOptions,
+    progress: options.onProgress,
+    timeoutMs: Number(source.requestTimeoutMs ?? 15e3),
+    cookies: /* @__PURE__ */ new Map()
+  };
+  const totalStartedAt = Date.now();
+  const authenticated = await openAuthenticatedList(targetUrl, account, config2, runtime);
+  let items = [...authenticated.parsed.items];
+  const total = authenticated.parsed.total;
+  const requestedPageSize = Math.min(Number(source.personalBugPageSize ?? 100), 1e3);
+  const maxPages = Number(source.maxPersonalBugPages ?? 20);
+  let pages = 1;
+  if (Number.isFinite(total) && items.length < total) {
+    if (!authenticated.parsed.linkCreator) {
+      throw new Error("\u7985\u9053\u4E2A\u4EBA Bug \u6570\u91CF\u8D85\u8FC7\u5F53\u524D\u9875\uFF0C\u4F46\u9875\u9762\u7F3A\u5C11\u5206\u9875\u94FE\u63A5");
+    }
+    if (authenticated.parsed.pageSize !== requestedPageSize) {
+      runtime.progress?.(`\u6B63\u5728\u5C06\u4E2A\u4EBA Bug \u6BCF\u9875\u6570\u91CF\u8C03\u6574\u4E3A ${requestedPageSize}`);
+      const firstPageUrl = pageUrlFromTemplate(
+        authenticated.parsed.linkCreator,
+        targetUrl,
+        requestedPageSize,
+        1
+      );
+      const firstPage = await fetchText(firstPageUrl, {
+        headers: runtime.cookies.size ? { Cookie: cookieHeader(runtime.cookies) } : {}
+      }, runtime);
+      items = [...parsePersonalBugPage(firstPage.text).items];
+      pages += 1;
+    }
+    const expectedPages = Math.ceil(total / requestedPageSize);
+    for (let page = 2; page <= expectedPages && page <= maxPages; page += 1) {
+      runtime.progress?.(`\u6B63\u5728\u8BFB\u53D6\u4E2A\u4EBA Bug \u5217\u8868 ${page}/${expectedPages}`);
+      const pageUrl = pageUrlFromTemplate(
+        authenticated.parsed.linkCreator,
+        targetUrl,
+        requestedPageSize,
+        page
+      );
+      const result = await fetchText(pageUrl, {
+        headers: runtime.cookies.size ? { Cookie: cookieHeader(runtime.cookies) } : {}
+      }, runtime);
+      items.push(...parsePersonalBugPage(result.text).items);
+      pages += 1;
+    }
+    if (items.length < total && source.allowTruncatedResults !== true) {
+      throw new Error(
+        `\u4E2A\u4EBA Bug \u5217\u8868\u5DF2\u8FBE\u5230 maxPersonalBugPages=${maxPages}\uFF0C\u7ED3\u679C\u53EF\u80FD\u88AB\u622A\u65AD`
+      );
+    }
+  }
+  const uniqueItems = [...new Map(items.map((item) => [String(item.id), item])).values()];
+  runtime.progress?.(`\u4E2A\u4EBA Bug \u5217\u8868\u8BFB\u53D6\u5B8C\u6210\uFF1A${uniqueItems.length} \u6761`);
+  return {
+    account,
+    items: uniqueItems,
+    requestSummary: {
+      listMode: "assigned-to-me",
+      webLoginRequests: authenticated.webLoginRequests,
+      personalListPages: pages,
+      personalCandidateCount: uniqueItems.length
+    },
+    timings: {
+      authenticationMs: authenticated.authenticationMs,
+      personalListMs: Date.now() - totalStartedAt
+    }
+  };
+}
 
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/utils.mjs
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile as readFile2, rename, rm, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 async function readJson(filePath) {
-  const text = await readFile(filePath, "utf8");
+  const text = await readFile2(filePath, "utf8");
   try {
     return JSON.parse(text);
   } catch (error2) {
     throw new Error(`\u65E0\u6CD5\u89E3\u6790 JSON\uFF1A${filePath}\uFF08${error2.message}\uFF09`);
   }
 }
+async function ensurePrivateDirectory(directoryPath) {
+  await mkdir(directoryPath, { recursive: true, mode: 448 });
+  await chmod(directoryPath, 448);
+  return directoryPath;
+}
+async function secureAtomicWrite(filePath, value, encoding = "utf8") {
+  const directoryPath = path.dirname(filePath);
+  await ensurePrivateDirectory(directoryPath);
+  const temporaryPath = path.join(
+    directoryPath,
+    `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`
+  );
+  try {
+    await writeFile(temporaryPath, value, {
+      encoding,
+      mode: 384,
+      flag: "wx"
+    });
+    await chmod(temporaryPath, 384);
+    await rename(temporaryPath, filePath);
+    await chmod(filePath, 384);
+  } finally {
+    await rm(temporaryPath, { force: true });
+  }
+  return filePath;
+}
 async function writeJson(filePath, value) {
-  await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, `${JSON.stringify(value, null, 2)}
-`, "utf8");
+  return secureAtomicWrite(filePath, `${JSON.stringify(value, null, 2)}
+`);
 }
 function resolvePath(baseDir, value) {
   if (!value) return void 0;
@@ -22048,6 +22368,27 @@ async function loadFixture(source) {
 function shouldRetryStatus(status) {
   return status === 408 || status === 429 || status >= 500;
 }
+function retryAfterMilliseconds(response) {
+  const value = response.headers?.get?.("retry-after");
+  if (!value) return void 0;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.min(seconds * 1e3, 3e4);
+  }
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return void 0;
+  return Math.min(Math.max(0, timestamp - Date.now()), 3e4);
+}
+function sanitizeSourceError(error2, context = "\u7985\u9053\u6570\u636E\u83B7\u53D6\u5931\u8D25") {
+  const status = Number(error2?.status);
+  const timeout = error2?.name === "AbortError" || error2?.code === "REQUEST_TIMEOUT";
+  return {
+    type: timeout ? "timeout" : Number.isFinite(status) ? "http" : "network",
+    ...Number.isFinite(status) ? { status } : {},
+    retryable: timeout || (Number.isFinite(status) ? shouldRetryStatus(status) : true),
+    message: timeout ? `${context}\uFF1A\u8BF7\u6C42\u8D85\u65F6` : Number.isFinite(status) ? `${context}\uFF1AHTTP ${status}` : `${context}\uFF1A\u7F51\u7EDC\u6216\u54CD\u5E94\u5F02\u5E38`
+  };
+}
 async function defaultDelay(milliseconds) {
   if (milliseconds <= 0) return;
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -22061,6 +22402,8 @@ async function requestJson(url, requestOptions, runtime) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
+      runtime.requestCount = (runtime.requestCount ?? 0) + 1;
+      if (attempt > 0) runtime.retryCount = (runtime.retryCount ?? 0) + 1;
       const response = await runtime.fetchImplementation(url, {
         method: requestOptions.method || "GET",
         headers: requestOptions.headers,
@@ -22068,11 +22411,9 @@ async function requestJson(url, requestOptions, runtime) {
         signal: controller.signal
       });
       if (!response.ok) {
-        const body = (await response.text()).slice(0, 1e3);
-        const error2 = new Error(
-          `\u7985\u9053\u8BF7\u6C42\u5931\u8D25\uFF1AHTTP ${response.status} ${response.statusText}\uFF1B${body}`
-        );
+        const error2 = new Error(`\u7985\u9053\u8BF7\u6C42\u5931\u8D25\uFF1AHTTP ${response.status}`);
         error2.status = response.status;
+        error2.retryAfterMs = retryAfterMilliseconds(response);
         if (!shouldRetryStatus(response.status) || attempt === retries) throw error2;
         lastError = error2;
       } else {
@@ -22082,7 +22423,9 @@ async function requestJson(url, requestOptions, runtime) {
       const retryable = error2.name === "AbortError" || error2.name === "TypeError" || /HTTP (408|429|5\d\d)/.test(error2.message);
       if (!retryable || attempt === retries) {
         if (error2.name === "AbortError") {
-          throw new Error(`\u7985\u9053\u8BF7\u6C42\u8D85\u65F6\uFF08${timeoutMs}ms\uFF09\uFF1A${url}`);
+          const timeoutError = new Error(`\u7985\u9053\u8BF7\u6C42\u8D85\u65F6\uFF08${timeoutMs}ms\uFF09`);
+          timeoutError.code = "REQUEST_TIMEOUT";
+          throw timeoutError;
         }
         throw error2;
       }
@@ -22090,7 +22433,8 @@ async function requestJson(url, requestOptions, runtime) {
     } finally {
       clearTimeout(timeout);
     }
-    await runtime.delayImplementation(retryDelayMs * (attempt + 1));
+    const exponentialDelay = Math.min(retryDelayMs * 2 ** attempt, 3e4);
+    await runtime.delayImplementation(lastError?.retryAfterMs ?? exponentialDelay);
   }
   throw lastError || new Error(`\u7985\u9053\u8BF7\u6C42\u5931\u8D25\uFF1A${url}`);
 }
@@ -22123,27 +22467,59 @@ async function enrichWithDetails(items, config2, headers, runtime) {
       bugId,
       id: bugId
     });
-    const payload = await requestJson(
-      url,
-      {
-        method: source.detailMethod || source.method || "GET",
-        headers,
-        retries: source.requestRetries,
-        timeoutMs: source.requestTimeoutMs,
-        retryDelayMs: source.retryDelayMs
-      },
-      runtime
-    );
-    const detail = source.detailResponsePath ? getByPath(payload, source.detailResponsePath) : payload;
-    if (!detail || typeof detail !== "object" || Array.isArray(detail)) {
-      throw new Error(`\u8BE6\u60C5\u54CD\u5E94\u8DEF\u5F84 ${source.detailResponsePath || "\uFF08\u6839\u8282\u70B9\uFF09"} \u4E0D\u662F\u5BF9\u8C61`);
+    try {
+      const payload = await requestJson(
+        url,
+        {
+          method: source.detailMethod || source.method || "GET",
+          headers,
+          retries: source.requestRetries,
+          timeoutMs: source.requestTimeoutMs,
+          retryDelayMs: source.retryDelayMs
+        },
+        runtime
+      );
+      const detail = source.detailResponsePath ? getByPath(payload, source.detailResponsePath) : payload;
+      if (!detail || typeof detail !== "object" || Array.isArray(detail)) {
+        throw new Error("\u8BE6\u60C5\u54CD\u5E94\u4E0D\u662F\u5BF9\u8C61");
+      }
+      return { ...item, ...detail };
+    } catch (error2) {
+      return {
+        ...item,
+        __fetchStatus: "detail_failed",
+        __fetchError: sanitizeSourceError(error2, `Bug ${bugId} \u8BE6\u60C5\u83B7\u53D6\u5931\u8D25`)
+      };
     }
-    return { ...item, ...detail };
   });
 }
 function zentaoApiBase(baseUrl) {
   const normalized = String(baseUrl).replace(/\/+$/g, "");
   return normalized.endsWith("/api.php/v1") ? normalized : `${normalized}/api.php/v1`;
+}
+async function zentaoRequestContext(config2) {
+  const { source } = config2;
+  let token = process.env[source.tokenEnv || "ZENTAO_TOKEN"];
+  if (!token && source.tokenFile) {
+    try {
+      token = (await readFile3(source.tokenFile, "utf8")).trim();
+    } catch {
+      throw new Error(`Token \u6587\u4EF6\u4E0D\u5B58\u5728\u6216\u4E0D\u53EF\u8BFB\uFF1A${source.tokenFile}`);
+    }
+  }
+  if (!token) {
+    throw new Error(
+      `\u7F3A\u5C11\u73AF\u5883\u53D8\u91CF ${source.tokenEnv || "ZENTAO_TOKEN"}\uFF0C\u4E14\u672A\u914D\u7F6E\u53EF\u8BFB\u7684 source.tokenFile`
+    );
+  }
+  return {
+    apiBase: zentaoApiBase(source.baseUrl),
+    headers: {
+      "Content-Type": "application/json",
+      ...interpolateEnvironment(source.headers ?? {}),
+      Token: token
+    }
+  };
 }
 function zentaoStatusCode(status) {
   if (status && typeof status === "object") {
@@ -22238,7 +22614,7 @@ async function loadZentaoProductBugs(product, config2, apiBase, headers, runtime
   return bugs.filter((bug) => shouldKeepZentaoBug(bug, config2));
 }
 async function enrichZentaoBug(bug, product, config2, apiBase, headers, runtime) {
-  const payload = await requestJson(
+  const responsePayload = await requestJson(
     `${apiBase}/bugs/${encodeURIComponent(String(bug.id))}`,
     {
       headers,
@@ -22248,38 +22624,22 @@ async function enrichZentaoBug(bug, product, config2, apiBase, headers, runtime)
     },
     runtime
   );
+  const payload = responsePayload?.bug && typeof responsePayload.bug === "object" ? responsePayload.bug : responsePayload;
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     throw new Error(`Bug ${bug.id} \u8BE6\u60C5\u54CD\u5E94\u4E0D\u662F\u5BF9\u8C61`);
   }
   return {
     ...bug,
     ...payload,
-    productName: product.name || bug.productName || String(product.id),
+    productName: product?.name || bug.productName || printableValue(payload.product) || printableValue(bug.product),
     projectName: payload.projectName || bug.projectName || printableValue(payload.project),
     moduleName: payload.moduleName || bug.moduleName || printableValue(payload.module)
   };
 }
-async function loadZentaoV1(config2, runtime) {
+async function loadZentaoProductScan(config2, runtime) {
+  const startedAt = Date.now();
   const { source } = config2;
-  let token = process.env[source.tokenEnv || "ZENTAO_TOKEN"];
-  if (!token && source.tokenFile) {
-    try {
-      token = (await readFile2(source.tokenFile, "utf8")).trim();
-    } catch {
-      throw new Error(`Token \u6587\u4EF6\u4E0D\u5B58\u5728\u6216\u4E0D\u53EF\u8BFB\uFF1A${source.tokenFile}`);
-    }
-  }
-  if (!token) {
-    throw new Error(
-      `\u7F3A\u5C11\u73AF\u5883\u53D8\u91CF ${source.tokenEnv || "ZENTAO_TOKEN"}\uFF0C\u4E14\u672A\u914D\u7F6E\u53EF\u8BFB\u7684 source.tokenFile`
-    );
-  }
-  const apiBase = zentaoApiBase(source.baseUrl);
-  const headers = {
-    "Content-Type": "application/json",
-    ...interpolateEnvironment(source.headers ?? {}),
-    Token: token
-  };
+  const { apiBase, headers } = await zentaoRequestContext(config2);
   if (!config2.currentUser) {
     const userPayload = await requestJson(
       `${apiBase}/user`,
@@ -22297,23 +22657,116 @@ async function loadZentaoV1(config2, runtime) {
     }
     config2.currentUser = account;
   }
+  runtime.progress?.("\u517C\u5BB9\u6A21\u5F0F\uFF1A\u6B63\u5728\u8BFB\u53D6\u7985\u9053\u4EA7\u54C1\u5217\u8868");
   const products = await loadZentaoProducts(config2, apiBase, headers, runtime);
-  const bugGroups = await mapWithConcurrency(
+  const productResults = await mapWithConcurrency(
     products,
     source.productConcurrency ?? 3,
-    (product) => loadZentaoProductBugs(product, config2, apiBase, headers, runtime)
+    async (product) => {
+      try {
+        return {
+          bugs: await loadZentaoProductBugs(product, config2, apiBase, headers, runtime)
+        };
+      } catch (error2) {
+        if (isZentaoUnauthorized(error2)) throw error2;
+        return {
+          bugs: [],
+          error: {
+            scope: "product-bugs",
+            productId: String(product.id),
+            productName: printableValue(product.name),
+            ...sanitizeSourceError(error2, `\u4EA7\u54C1 ${product.id} \u7684 Bug \u5217\u8868\u83B7\u53D6\u5931\u8D25`)
+          }
+        };
+      }
+    }
   );
-  const candidates = bugGroups.flat();
+  const candidates = productResults.flatMap((result) => result.bugs);
+  const sourceErrors = productResults.flatMap((result) => result.error ? [result.error] : []);
   const productsById = new Map(products.map((product) => [String(product.id), product]));
-  return mapWithConcurrency(candidates, source.detailConcurrency ?? 4, (bug) => {
+  const items = await mapWithConcurrency(candidates, source.detailConcurrency ?? 4, async (bug) => {
     const product = productsById.get(String(bug.product)) || {
       id: bug.product,
       name: bug.productName
     };
-    return enrichZentaoBug(bug, product, config2, apiBase, headers, runtime);
+    try {
+      return await enrichZentaoBug(bug, product, config2, apiBase, headers, runtime);
+    } catch (error2) {
+      if (isZentaoUnauthorized(error2)) throw error2;
+      return {
+        ...bug,
+        __fetchStatus: "detail_failed",
+        __fetchError: sanitizeSourceError(error2, `Bug ${bug.id} \u8BE6\u60C5\u83B7\u53D6\u5931\u8D25`)
+      };
+    }
   });
+  return {
+    items,
+    sourceErrors,
+    requestSummary: {
+      listMode: "product-scan",
+      productCount: products.length,
+      personalCandidateCount: candidates.length,
+      matchedBugCount: items.length,
+      restApiRequests: runtime.requestCount ?? 0,
+      retryCount: runtime.retryCount ?? 0
+    },
+    timings: { totalMs: Date.now() - startedAt }
+  };
+}
+async function loadZentaoAssignedToMe(config2, runtime) {
+  const startedAt = Date.now();
+  const personal = await loadPersonalBugList(config2, runtime.options);
+  const candidates = personal.items.filter((bug) => shouldKeepZentaoBug(bug, config2));
+  const { apiBase, headers } = await zentaoRequestContext(config2);
+  const detailStartedAt = Date.now();
+  let completedDetails = 0;
+  const items = await mapWithConcurrency(
+    candidates,
+    config2.source.detailConcurrency ?? 4,
+    async (bug) => {
+      try {
+        return await enrichZentaoBug(bug, void 0, config2, apiBase, headers, runtime);
+      } catch (error2) {
+        if (isZentaoUnauthorized(error2)) throw error2;
+        return {
+          ...bug,
+          __fetchStatus: "detail_failed",
+          __fetchError: sanitizeSourceError(error2, `Bug ${bug.id} \u8BE6\u60C5\u83B7\u53D6\u5931\u8D25`)
+        };
+      } finally {
+        completedDetails += 1;
+        runtime.progress?.(`\u6B63\u5728\u8BFB\u53D6 Bug \u8BE6\u60C5 ${completedDetails}/${candidates.length}`);
+      }
+    }
+  );
+  const retainedItems = items.filter((bug) => bug.__fetchStatus === "detail_failed" || shouldKeepZentaoBug(bug, config2));
+  const detailsMs = Date.now() - detailStartedAt;
+  return {
+    items: retainedItems,
+    sourceErrors: [],
+    requestSummary: {
+      ...personal.requestSummary,
+      matchedBugCount: retainedItems.length,
+      detailRequests: candidates.length,
+      restApiRequests: runtime.requestCount ?? 0,
+      retryCount: runtime.retryCount ?? 0
+    },
+    timings: {
+      ...personal.timings,
+      detailsMs,
+      totalMs: Date.now() - startedAt
+    }
+  };
+}
+async function loadZentaoV1(config2, runtime) {
+  if ((config2.source.personalBugListMode || "assigned-to-me") === "product-scan") {
+    return loadZentaoProductScan(config2, runtime);
+  }
+  return loadZentaoAssignedToMe(config2, runtime);
 }
 async function loadRest(config2, runtime) {
+  const startedAt = Date.now();
   const { source, currentUser } = config2;
   const pageStart = Number(source.pageStart ?? 1);
   const pageSize = Number(source.pageSize ?? 100);
@@ -22360,7 +22813,73 @@ async function loadRest(config2, runtime) {
       `\u5DF2\u8FBE\u5230 maxPages=${maxPages}\uFF0C\u7ED3\u679C\u53EF\u80FD\u88AB\u622A\u65AD\uFF1B\u8BF7\u63D0\u9AD8 maxPages\u3001\u914D\u7F6E responseTotalPath\uFF0C\u6216\u663E\u5F0F\u8BBE\u7F6E allowTruncatedResults=true`
     );
   }
-  return enrichWithDetails(items, config2, headers, runtime);
+  const enriched = await enrichWithDetails(items, config2, headers, runtime);
+  return {
+    items: enriched,
+    sourceErrors: [],
+    requestSummary: {
+      listMode: "rest",
+      personalCandidateCount: items.length,
+      matchedBugCount: enriched.length,
+      restApiRequests: runtime.requestCount ?? 0,
+      retryCount: runtime.retryCount ?? 0
+    },
+    timings: { totalMs: Date.now() - startedAt }
+  };
+}
+async function loadRawBugFromFixture(config2, bugId) {
+  const items = await loadFixture(config2.source);
+  const idPath = config2.source.fields?.id || "id";
+  const item = items.find((candidate) => String(getByPath(candidate, idPath)) === String(bugId));
+  if (!item) throw new Error(`Fixture \u4E2D\u4E0D\u5B58\u5728 Bug ${bugId}`);
+  return item;
+}
+async function loadRawRestBug(config2, bugId, runtime) {
+  const { source, currentUser } = config2;
+  if (!source.detailUrlTemplate) {
+    throw new Error("REST \u5355 Bug \u67E5\u8BE2\u9700\u8981\u914D\u7F6E source.detailUrlTemplate");
+  }
+  const headers = interpolateEnvironment(source.headers ?? {});
+  const url = renderUrl(source.detailUrlTemplate, {
+    baseUrl: String(source.baseUrl ?? "").replace(/\/+$/g, ""),
+    currentUser,
+    bugId,
+    id: bugId
+  });
+  const payload = await requestJson(
+    url,
+    {
+      method: source.detailMethod || source.method || "GET",
+      headers,
+      retries: source.requestRetries,
+      timeoutMs: source.requestTimeoutMs,
+      retryDelayMs: source.retryDelayMs
+    },
+    runtime
+  );
+  const detail = source.detailResponsePath ? getByPath(payload, source.detailResponsePath) : payload;
+  if (!detail || typeof detail !== "object" || Array.isArray(detail)) {
+    throw new Error("\u8BE6\u60C5\u54CD\u5E94\u4E0D\u662F\u5BF9\u8C61");
+  }
+  return detail;
+}
+async function loadRawZentaoBug(config2, bugId, runtime) {
+  const { apiBase, headers } = await zentaoRequestContext(config2);
+  const payload = await requestJson(
+    `${apiBase}/bugs/${encodeURIComponent(String(bugId))}`,
+    {
+      headers,
+      retries: config2.source.requestRetries,
+      timeoutMs: config2.source.requestTimeoutMs,
+      retryDelayMs: config2.source.retryDelayMs
+    },
+    runtime
+  );
+  const detail = payload?.bug && typeof payload.bug === "object" ? payload.bug : payload;
+  if (!detail || typeof detail !== "object" || Array.isArray(detail)) {
+    throw new Error(`Bug ${bugId} \u8BE6\u60C5\u54CD\u5E94\u4E0D\u662F\u5BF9\u8C61`);
+  }
+  return detail;
 }
 async function requestZentaoV1Token({ baseUrl, account, password, timeoutMs = 15e3 }, options = {}) {
   if (!baseUrl || !account || !password) {
@@ -22390,30 +22909,253 @@ async function requestZentaoV1Token({ baseUrl, account, password, timeoutMs = 15
 function isZentaoUnauthorized(error2) {
   return error2?.status === 401;
 }
-async function loadRawBugs(config2, options = {}) {
-  if (config2.source.type === "fixture") return loadFixture(config2.source);
-  const runtime = {
+function runtimeFromOptions(options) {
+  return {
     fetchImplementation: options.fetchImplementation ?? fetch,
-    delayImplementation: options.delayImplementation ?? defaultDelay
+    delayImplementation: options.delayImplementation ?? defaultDelay,
+    progress: options.onProgress,
+    options,
+    requestCount: 0,
+    retryCount: 0
   };
+}
+async function loadRawBugsWithMetadata(config2, options = {}) {
+  if (config2.source.type === "fixture") {
+    const items = await loadFixture(config2.source);
+    return {
+      items,
+      sourceErrors: [],
+      requestSummary: { listMode: "fixture", matchedBugCount: items.length },
+      timings: { totalMs: 0 }
+    };
+  }
+  const runtime = runtimeFromOptions(options);
   if (config2.source.type === "zentao-v1") return loadZentaoV1(config2, runtime);
   return loadRest(config2, runtime);
 }
+async function loadRawBugById(config2, bugId, options = {}) {
+  if (config2.source.type === "fixture") return loadRawBugFromFixture(config2, bugId);
+  const runtime = runtimeFromOptions(options);
+  if (config2.source.type === "zentao-v1") {
+    return loadRawZentaoBug(config2, bugId, runtime);
+  }
+  return loadRawRestBug(config2, bugId, runtime);
+}
+async function fetchBinary(url, requestOptions, options = {}) {
+  const runtime = runtimeFromOptions(options);
+  const retries = Number(requestOptions.retries ?? 0);
+  const timeoutMs = Number(requestOptions.timeoutMs ?? 15e3);
+  const retryDelayMs = Number(requestOptions.retryDelayMs ?? 300);
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await runtime.fetchImplementation(url, {
+        method: "GET",
+        headers: requestOptions.headers,
+        signal: controller.signal,
+        redirect: requestOptions.redirect || "manual"
+      });
+      if (response.status >= 300 && response.status < 400) return response;
+      if (!response.ok) {
+        const error2 = new Error(`\u7985\u9053\u8BF7\u6C42\u5931\u8D25\uFF1AHTTP ${response.status}`);
+        error2.status = response.status;
+        error2.retryAfterMs = retryAfterMilliseconds(response);
+        if (!shouldRetryStatus(response.status) || attempt === retries) throw error2;
+        lastError = error2;
+      } else {
+        return response;
+      }
+    } catch (error2) {
+      const retryable = error2.name === "AbortError" || error2.name === "TypeError" || /HTTP (408|429|5\d\d)/.test(error2.message);
+      if (!retryable || attempt === retries) {
+        if (error2.name === "AbortError") {
+          const timeoutError = new Error(`\u7985\u9053\u8BF7\u6C42\u8D85\u65F6\uFF08${timeoutMs}ms\uFF09`);
+          timeoutError.code = "REQUEST_TIMEOUT";
+          throw timeoutError;
+        }
+        throw error2;
+      }
+      lastError = error2;
+    } finally {
+      clearTimeout(timeout);
+    }
+    const exponentialDelay = Math.min(retryDelayMs * 2 ** attempt, 3e4);
+    await runtime.delayImplementation(lastError?.retryAfterMs ?? exponentialDelay);
+  }
+  throw lastError || new Error("\u7985\u9053\u8BF7\u6C42\u5931\u8D25");
+}
+
+// plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/attachment.mjs
+var DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
+var MIME_BY_EXTENSION = /* @__PURE__ */ new Map([
+  [".png", "image/png"],
+  [".jpg", "image/jpeg"],
+  [".jpeg", "image/jpeg"],
+  [".webp", "image/webp"],
+  [".gif", "image/gif"]
+]);
+var ALLOWED_MIME_TYPES = new Set(MIME_BY_EXTENSION.values());
+function renderAttachmentUrl(template, variables) {
+  return String(template).replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g, (_, name) => {
+    if (variables[name] == null) throw new Error(`\u9644\u4EF6 URL \u6A21\u677F\u7F3A\u5C11\u53D8\u91CF\uFF1A${name}`);
+    return name === "baseUrl" ? String(variables[name]).replace(/\/+$/g, "") : encodeURIComponent(String(variables[name]));
+  });
+}
+function resolveAttachmentUrl(config2, bugId, attachment) {
+  const candidate = attachment.downloadUrl || attachment.url || attachment.webPath;
+  if (candidate) {
+    const base = new URL(config2.source.baseUrl);
+    const url = new URL(candidate, base);
+    if (base.protocol === "https:" && url.protocol === "http:" && url.hostname === base.hostname && (!url.port || url.port === "80")) {
+      url.protocol = "https:";
+      url.port = base.port;
+    }
+    return url;
+  }
+  if (config2.source.attachmentUrlTemplate) {
+    return new URL(
+      renderAttachmentUrl(config2.source.attachmentUrlTemplate, {
+        baseUrl: config2.source.baseUrl,
+        bugId,
+        fileId: attachment.id
+      }),
+      config2.source.baseUrl
+    );
+  }
+  const error2 = new Error("\u8BE5\u9644\u4EF6\u6CA1\u6709\u53EF\u7528\u4E0B\u8F7D\u5730\u5740\uFF0C\u8BF7\u914D\u7F6E source.attachmentUrlTemplate");
+  error2.code = "ATTACHMENT_DOWNLOAD_UNSUPPORTED";
+  throw error2;
+}
+function assertSameOrigin(url, baseUrl) {
+  const base = new URL(baseUrl);
+  if (url.origin !== base.origin) {
+    const error2 = new Error("\u9644\u4EF6\u5730\u5740\u4E0E\u7985\u9053\u5730\u5740\u4E0D\u540C\u6E90\uFF0C\u5DF2\u62D2\u7EDD\u4E0B\u8F7D");
+    error2.code = "ATTACHMENT_CROSS_ORIGIN";
+    throw error2;
+  }
+}
+function detectedMimeType(bytes) {
+  if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) return "image/png";
+  if (bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) {
+    return "image/jpeg";
+  }
+  const prefix = bytes.subarray(0, 6).toString("ascii");
+  if (prefix === "GIF87a" || prefix === "GIF89a") return "image/gif";
+  if (bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WEBP") return "image/webp";
+  return void 0;
+}
+function normalizedDeclaredMime(value) {
+  const mime = String(value || "").split(";", 1)[0].trim().toLocaleLowerCase();
+  return mime === "image/jpg" ? "image/jpeg" : mime;
+}
+function validateImage(attachment, response, bytes, maxBytes) {
+  if (bytes.length > maxBytes) {
+    throw new Error(`\u56FE\u7247\u9644\u4EF6\u8D85\u8FC7\u5927\u5C0F\u9650\u5236\uFF08${maxBytes} \u5B57\u8282\uFF09`);
+  }
+  const detected = detectedMimeType(bytes);
+  if (!detected || !ALLOWED_MIME_TYPES.has(detected)) {
+    throw new Error("\u9644\u4EF6\u5185\u5BB9\u4E0D\u662F\u53D7\u652F\u6301\u7684 PNG\u3001JPEG\u3001WebP \u6216 GIF \u56FE\u7247");
+  }
+  const declared = normalizedDeclaredMime(
+    response.headers.get("content-type") || attachment.mimeType
+  );
+  if (declared && (!ALLOWED_MIME_TYPES.has(declared) || declared !== detected)) {
+    throw new Error("\u9644\u4EF6\u58F0\u660E\u7C7B\u578B\u4E0E\u5B9E\u9645\u56FE\u7247\u5185\u5BB9\u4E0D\u4E00\u81F4");
+  }
+  const extension = path2.extname(attachment.name || "").toLocaleLowerCase();
+  if (extension && (!MIME_BY_EXTENSION.has(extension) || MIME_BY_EXTENSION.get(extension) !== detected)) {
+    throw new Error("\u9644\u4EF6\u6269\u5C55\u540D\u4E0E\u5B9E\u9645\u56FE\u7247\u5185\u5BB9\u4E0D\u4E00\u81F4");
+  }
+  return detected;
+}
+async function requestHeaders(config2) {
+  if (config2.source.type === "zentao-v1") {
+    const tokenEnv = config2.source.tokenEnv || "ZENTAO_TOKEN";
+    let token = process.env[tokenEnv];
+    if (!token && config2.source.tokenFile) {
+      const { readFile: readFile6 } = await import("node:fs/promises");
+      token = (await readFile6(config2.source.tokenFile, "utf8")).trim();
+    }
+    if (!token) throw new Error("\u7F3A\u5C11\u7985\u9053 Token\uFF0C\u65E0\u6CD5\u4E0B\u8F7D\u9644\u4EF6");
+    return {
+      ...interpolateEnvironment(config2.source.headers ?? {}),
+      Token: token
+    };
+  }
+  return interpolateEnvironment(config2.source.headers ?? {});
+}
+function findBugAttachment(item, attachmentId) {
+  const attachment = (item?.bug?.attachments ?? []).find(
+    (candidate) => String(candidate.id) === String(attachmentId)
+  );
+  if (!attachment) {
+    throw new Error(`Bug ${item?.bug?.id || "\u672A\u77E5"} \u4E2D\u4E0D\u5B58\u5728\u9644\u4EF6 ${attachmentId}`);
+  }
+  return attachment;
+}
+async function downloadBugImage(config2, bugId, attachment, options = {}) {
+  const maxBytes = Number(config2.source.maxAttachmentBytes ?? DEFAULT_MAX_BYTES);
+  if (attachment.size != null && attachment.size > maxBytes) {
+    throw new Error(`\u56FE\u7247\u9644\u4EF6\u8D85\u8FC7\u5927\u5C0F\u9650\u5236\uFF08${maxBytes} \u5B57\u8282\uFF09`);
+  }
+  let url = resolveAttachmentUrl(config2, bugId, attachment);
+  const headers = await requestHeaders(config2);
+  const fetchOptions = {
+    headers,
+    retries: config2.source.requestRetries,
+    timeoutMs: config2.source.requestTimeoutMs,
+    retryDelayMs: config2.source.retryDelayMs,
+    redirect: "manual"
+  };
+  for (let redirects = 0; redirects <= 3; redirects += 1) {
+    assertSameOrigin(url, config2.source.baseUrl);
+    const response = await fetchBinary(url.href, fetchOptions, options);
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location || redirects === 3) throw new Error("\u9644\u4EF6\u91CD\u5B9A\u5411\u65E0\u6548\u6216\u6B21\u6570\u8FC7\u591A");
+      url = new URL(location, url);
+      continue;
+    }
+    const declaredLength = Number(response.headers.get("content-length"));
+    if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+      throw new Error(`\u56FE\u7247\u9644\u4EF6\u8D85\u8FC7\u5927\u5C0F\u9650\u5236\uFF08${maxBytes} \u5B57\u8282\uFF09`);
+    }
+    const bytes = Buffer.from(await response.arrayBuffer());
+    const mimeType = validateImage(attachment, response, bytes, maxBytes);
+    return {
+      metadata: {
+        bugId: String(bugId),
+        attachmentId: String(attachment.id),
+        name: attachment.name,
+        mimeType,
+        size: bytes.length
+      },
+      data: bytes.toString("base64")
+    };
+  }
+  throw new Error("\u9644\u4EF6\u4E0B\u8F7D\u5931\u8D25");
+}
 
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/auth.mjs
+import { chmod as chmod2, mkdir as mkdir2, readFile as readFile4, writeFile as writeFile2 } from "node:fs/promises";
+import path3 from "node:path";
+import process5 from "node:process";
+import { createInterface } from "node:readline/promises";
 async function writeTokenFile(filePath, token) {
   if (!filePath) throw new Error("\u914D\u7F6E\u7F3A\u5C11 source.tokenFile");
-  await mkdir2(path2.dirname(filePath), { recursive: true, mode: 448 });
+  await mkdir2(path3.dirname(filePath), { recursive: true, mode: 448 });
   await writeFile2(filePath, `${token.trim()}
 `, { encoding: "utf8", mode: 384 });
-  await chmod(filePath, 384);
+  await chmod2(filePath, 384);
   return filePath;
 }
 async function readStoredAccount(config2) {
   if (config2.currentUser?.trim()) return config2.currentUser.trim();
   if (config2.source.accountFile) {
     try {
-      const account = (await readFile3(config2.source.accountFile, "utf8")).trim();
+      const account = (await readFile4(config2.source.accountFile, "utf8")).trim();
       if (account) return account;
     } catch {
     }
@@ -22430,7 +23172,7 @@ async function findStoredToken(config2) {
   if (process5.env[tokenEnv]) return { ready: true, source: "environment" };
   if (config2.source.tokenFile) {
     try {
-      const token = (await readFile3(config2.source.tokenFile, "utf8")).trim();
+      const token = (await readFile4(config2.source.tokenFile, "utf8")).trim();
       if (token) return { ready: true, source: "file" };
     } catch {
     }
@@ -22513,7 +23255,7 @@ async function withAutomaticTokenRefresh(config2, operation, options = {}) {
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/config-path.mjs
 import { access } from "node:fs/promises";
 import os from "node:os";
-import path3 from "node:path";
+import path4 from "node:path";
 import process6 from "node:process";
 async function fileExists(filePath) {
   try {
@@ -22524,17 +23266,17 @@ async function fileExists(filePath) {
   }
 }
 async function findDefaultConfigPath(options = {}) {
-  if (options.config) return path3.resolve(options.config);
+  if (options.config) return path4.resolve(options.config);
   const environment = options.environment || process6.env;
-  const codexHome = environment.CODEX_HOME ? path3.resolve(environment.CODEX_HOME) : path3.join(options.homeDirectory || os.homedir(), ".codex");
+  const codexHome = environment.CODEX_HOME ? path4.resolve(environment.CODEX_HOME) : path4.join(options.homeDirectory || os.homedir(), ".codex");
   const currentDirectory = options.currentDirectory || process6.cwd();
   const candidates = [
     environment.ZENTAO_BUGFIX_CONFIG,
-    path3.join(currentDirectory, ".bugfix.local.json"),
-    path3.join(codexHome, "zentao-frontend-bugfix", "config.json")
+    path4.join(currentDirectory, ".bugfix.local.json"),
+    path4.join(codexHome, "zentao-frontend-bugfix", "config.json")
   ].filter(Boolean);
   for (const candidate of candidates) {
-    const absolutePath = path3.resolve(candidate);
+    const absolutePath = path4.resolve(candidate);
     if (await fileExists(absolutePath)) return absolutePath;
   }
   throw new Error(
@@ -22543,12 +23285,12 @@ async function findDefaultConfigPath(options = {}) {
 }
 
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/config.mjs
-import path5 from "node:path";
+import path6 from "node:path";
 
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/repository.mjs
 import { access as access2, stat } from "node:fs/promises";
 import { constants } from "node:fs";
-import path4 from "node:path";
+import path5 from "node:path";
 function repositoryKeyForProject(projectName) {
   return printableValue(projectName).trim().toLocaleLowerCase();
 }
@@ -22572,7 +23314,7 @@ function findRepository(bug, repositoriesByProject) {
         key,
         mapping2?.projectName,
         mapping2?.name,
-        mapping2?.repoPath ? path4.basename(mapping2.repoPath) : ""
+        mapping2?.repoPath ? path5.basename(mapping2.repoPath) : ""
       ].map(comparableRepositoryName).filter((name) => name.length >= 3);
       return query.length >= 3 && names.some((name) => name === query || name.includes(query) || query.includes(name));
     });
@@ -22598,7 +23340,7 @@ async function inspectRepository(repository) {
     const info = await stat(repository.repoPath);
     if (!info.isDirectory()) throw new Error("not a directory");
     await access2(repository.repoPath, constants.R_OK | constants.W_OK);
-    const packageJsonPath = path4.join(repository.repoPath, "package.json");
+    const packageJsonPath = path5.join(repository.repoPath, "package.json");
     let hasPackageJson = true;
     try {
       await access2(packageJsonPath, constants.R_OK);
@@ -22672,8 +23414,8 @@ function validateStringArray(value, label) {
   }
 }
 async function loadConfig(configPath) {
-  const absoluteConfigPath = path5.resolve(configPath);
-  const configDir = path5.dirname(absoluteConfigPath);
+  const absoluteConfigPath = path6.resolve(configPath);
+  const configDir = path6.dirname(absoluteConfigPath);
   const raw = await readJson(absoluteConfigPath);
   if (!raw.source || !["fixture", "rest", "zentao-v1"].includes(raw.source.type)) {
     throw new Error("source.type \u5FC5\u987B\u662F fixture\u3001rest \u6216 zentao-v1");
@@ -22706,6 +23448,14 @@ async function loadConfig(configPath) {
   }
   if (raw.source.type === "zentao-v1") {
     assertString(raw.source.baseUrl, "source.baseUrl");
+    if (raw.source.personalBugListMode != null && !["assigned-to-me", "product-scan"].includes(raw.source.personalBugListMode)) {
+      throw new Error(
+        "source.personalBugListMode \u5FC5\u987B\u662F assigned-to-me \u6216 product-scan"
+      );
+    }
+    if (raw.source.personalBugListPath != null) {
+      assertString(raw.source.personalBugListPath, "source.personalBugListPath");
+    }
     if (raw.source.tokenEnv != null && !/^[A-Z_][A-Z0-9_]*$/.test(raw.source.tokenEnv)) {
       throw new Error("source.tokenEnv \u5FC5\u987B\u662F\u5408\u6CD5\u7684\u73AF\u5883\u53D8\u91CF\u540D");
     }
@@ -22725,11 +23475,23 @@ async function loadConfig(configPath) {
       ["detailConcurrency", 1],
       ["requestTimeoutMs", 1],
       ["requestRetries", 0],
-      ["retryDelayMs", 0]
+      ["retryDelayMs", 0],
+      ["personalBugPageSize", 1],
+      ["maxPersonalBugPages", 1]
     ]) {
       validateNumber(raw.source[field], `source.${field}`, { minimum, integer: true });
     }
+    if (raw.source.personalBugPageSize > 1e3) {
+      throw new Error("source.personalBugPageSize \u4E0D\u80FD\u5927\u4E8E 1000");
+    }
   }
+  if (raw.source.attachmentUrlTemplate != null) {
+    assertString(raw.source.attachmentUrlTemplate, "source.attachmentUrlTemplate");
+  }
+  validateNumber(raw.source.maxAttachmentBytes, "source.maxAttachmentBytes", {
+    minimum: 1,
+    integer: true
+  });
   const repositoriesByProject = raw.repositoriesByProject ?? {};
   if (typeof repositoriesByProject !== "object" || repositoriesByProject == null || Array.isArray(repositoriesByProject)) {
     throw new Error("repositoriesByProject \u5FC5\u987B\u662F\u4EE5\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0\u4E3A key \u7684\u5BF9\u8C61");
@@ -22746,7 +23508,7 @@ async function loadConfig(configPath) {
       return [
         projectKey,
         {
-          name: entry.name || path5.basename(entry.repoPath),
+          name: entry.name || path6.basename(entry.repoPath),
           repoPath: resolvePath(configDir, entry.repoPath),
           projectName
         }
@@ -22774,6 +23536,10 @@ async function loadConfig(configPath) {
       ...raw.source,
       path: raw.source.type === "fixture" ? resolvePath(configDir, raw.source.path) : raw.source.path,
       tokenEnv: raw.source.type === "zentao-v1" ? raw.source.tokenEnv || "ZENTAO_TOKEN" : void 0,
+      personalBugListMode: raw.source.type === "zentao-v1" ? raw.source.personalBugListMode || "assigned-to-me" : void 0,
+      personalBugListPath: raw.source.type === "zentao-v1" ? raw.source.personalBugListPath || "my-work-bug-assignedTo--id_desc.html" : void 0,
+      personalBugPageSize: raw.source.type === "zentao-v1" ? raw.source.personalBugPageSize || 100 : void 0,
+      maxPersonalBugPages: raw.source.type === "zentao-v1" ? raw.source.maxPersonalBugPages || 20 : void 0,
       tokenFile: raw.source.type === "zentao-v1" ? resolvePath(configDir, raw.source.tokenFile || ".bugfix-secrets/zentao-token") : void 0,
       accountFile: raw.source.type === "zentao-v1" ? resolvePath(configDir, raw.source.accountFile || ".bugfix-secrets/zentao-account") : void 0,
       fields: raw.source.type === "zentao-v1" ? { ...ZENTAO_V1_FIELDS, ...raw.source.fields ?? {} } : raw.source.fields
@@ -22794,8 +23560,8 @@ async function loadConfig(configPath) {
 }
 
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/report.mjs
-import { mkdir as mkdir3, writeFile as writeFile3 } from "node:fs/promises";
-import path6 from "node:path";
+import { chmod as chmod3, readdir, rm as rm2 } from "node:fs/promises";
+import path7 from "node:path";
 var DECISIONS = ["AUTO_FIX", "NEED_CONFIRM", "HUMAN_REQUIRED", "BLOCKED"];
 var DECISION_LABELS = {
   AUTO_FIX: "\u53EF\u76F4\u63A5\u4FEE\u6539\uFF08\u7B49\u5F85\u7528\u6237\u786E\u8BA4\u4FEE\u6539\uFF09",
@@ -22816,6 +23582,22 @@ function contextList(values) {
 function bugMarkdown(item) {
   const questions = item.triage.questions.length ? item.triage.questions.map((question) => `- ${question}`).join("\n") : "- \u65E0";
   const reasons = item.triage.reasons.map((reason) => `- ${reason}`).join("\n");
+  const aiAnalysis = item.aiAnalysis ? `## Codex \u8BED\u4E49\u5206\u6790
+
+- \u6838\u5FC3\u95EE\u9898\uFF1A${item.aiAnalysis.summary}
+- \u7528\u6237\u7C7B\u578B\uFF1A${item.aiAnalysis.problemType}
+- \u5185\u90E8\u5B50\u7C7B\u578B\uFF1A${item.aiAnalysis.subtype || "\u672A\u63D0\u4F9B"}
+- \u662F\u5426\u9700\u8981\u786E\u8BA4\uFF1A${item.aiAnalysis.needsConfirmation ? "\u662F" : "\u5426"}
+- \u786E\u8BA4\u95EE\u9898\uFF1A${item.aiAnalysis.confirmationQuestion || "\u65E0"}
+- \u5EFA\u8BAE\u4FEE\u6539\uFF1A${item.aiAnalysis.proposedChange || "\u672A\u63D0\u4F9B"}
+- \u98CE\u9669\uFF1A${item.aiAnalysis.risk}
+- \u5206\u6790\u65F6\u95F4\uFF1A${item.aiAnalysis.analyzedAt}
+
+### \u8BC1\u636E
+
+${item.aiAnalysis.evidence.length ? item.aiAnalysis.evidence.map((value) => `- ${value}`).join("\n") : "- \u65E0"}
+
+` : "";
   return `# Bug ${item.bug.id}\uFF1A${item.bug.title || "\uFF08\u65E0\u6807\u9898\uFF09"}
 
 ## \u7985\u9053\u4FE1\u606F
@@ -22850,11 +23632,12 @@ ${contextList(item.bug.attachments)}
 
 ${contextList(item.bug.comments)}
 
-## \u5206\u8BCA\u7ED3\u8BBA
+${aiAnalysis}## \u5206\u8BCA\u7ED3\u8BBA
 
 - \u7C7B\u578B\uFF1A${item.triage.category}
 - \u5904\u7406\u7ED3\u8BBA\uFF1A${item.triage.decision}
 - \u7F6E\u4FE1\u5EA6\uFF1A${item.triage.confidence}
+- \u8BE6\u60C5\u83B7\u53D6\u72B6\u6001\uFF1A${item.bug.fetchStatus || "complete"}
 - \u4ED3\u5E93\uFF1A${item.repository?.repoPath || "\u672A\u5339\u914D"}
 - \u4E0B\u4E00\u6B65\uFF1A${item.triage.nextAction}
 
@@ -22886,6 +23669,11 @@ ${rows || "| - | \u6682\u65E0 | - | - | - | - | - | - |"}`;
 - \u751F\u6210\u65F6\u95F4\uFF1A${report.generatedAt}
 - \u5F53\u524D\u7528\u6237\uFF1A${report.currentUser}
 - Bug \u603B\u6570\uFF1A${report.stats.total}
+- \u62A5\u544A\u8303\u56F4\uFF1A${report.completeList ? "\u5B8C\u6574\u4E2A\u4EBA Bug \u6E05\u5355" : "\u5355 Bug \u62A5\u544A"}
+- \u6570\u636E\u83B7\u53D6\uFF1A\u5B8C\u6574 ${report.fetchSummary.complete}\uFF0C\u8BE6\u60C5\u5931\u8D25 ${report.fetchSummary.detailFailed}\uFF0C\u6570\u636E\u6E90\u5931\u8D25 ${report.fetchSummary.sourceErrorCount}
+- \u62C9\u53D6\u6A21\u5F0F\uFF1A${report.requestSummary?.listMode || "\u672A\u8BB0\u5F55"}
+- \u62C9\u53D6\u8017\u65F6\uFF1A${Number.isFinite(report.timings?.totalMs) ? `${(report.timings.totalMs / 1e3).toFixed(2)} \u79D2` : "\u672A\u8BB0\u5F55"}
+- \u7985\u9053\u5019\u9009\uFF1A${report.requestSummary?.personalCandidateCount ?? "\u672A\u8BB0\u5F55"}\uFF0C\u8BE6\u60C5\u8BF7\u6C42\uFF1A${report.requestSummary?.detailRequests ?? "\u672A\u8BB0\u5F55"}
 
 ## \u5904\u7406\u7ED3\u8BBA\u7EDF\u8BA1
 
@@ -22896,7 +23684,56 @@ ${groups}
 \u8BE6\u7EC6\u4E0A\u4E0B\u6587\u89C1\u540C\u76EE\u5F55\u4E0B\u7684 \`bugs/\`\u3002
 `;
 }
-async function writeTriageReport(config2, items) {
+function fetchSummaryFor(items, sourceErrors = []) {
+  const detailFailed = items.filter(
+    (item) => item?.bug?.fetchStatus === "detail_failed"
+  ).length;
+  return {
+    status: detailFailed > 0 || sourceErrors.length > 0 ? "partial" : "complete",
+    complete: items.length - detailFailed,
+    detailFailed,
+    sourceErrorCount: sourceErrors.length
+  };
+}
+function upgradeReport(report) {
+  if (!report || typeof report !== "object" || !Array.isArray(report.items)) {
+    throw new Error("\u5206\u8BCA\u62A5\u544A\u683C\u5F0F\u65E0\u6548\uFF1A\u7F3A\u5C11 items \u6570\u7EC4");
+  }
+  const sourceErrors = Array.isArray(report.sourceErrors) ? report.sourceErrors : [];
+  return {
+    ...report,
+    schemaVersion: 2,
+    scope: report.scope || "complete-list",
+    completeList: report.completeList !== false,
+    sourceErrors,
+    fetchSummary: report.fetchSummary || fetchSummaryFor(report.items, sourceErrors),
+    requestSummary: report.requestSummary || {},
+    timings: report.timings || {}
+  };
+}
+async function readTriageReport(reportPath) {
+  await ensurePrivateDirectory(path7.dirname(reportPath));
+  await chmod3(reportPath, 384);
+  return upgradeReport(await readJson(reportPath));
+}
+async function removeStaleBugReports(bugsDir, currentNames) {
+  let entries;
+  try {
+    entries = await readdir(bugsDir, { withFileTypes: true });
+  } catch (error2) {
+    if (error2.code === "ENOENT") return;
+    throw error2;
+  }
+  await Promise.all(
+    entries.filter(
+      (entry) => entry.isFile() && entry.name.endsWith(".md") && !currentNames.has(entry.name)
+    ).map((entry) => rm2(path7.join(bugsDir, entry.name)))
+  );
+}
+async function writeTriageReport(config2, items, options = {}) {
+  const sourceErrors = options.sourceErrors ?? items.sourceErrors ?? [];
+  const requestSummary = options.requestSummary ?? items.requestSummary ?? {};
+  const timings = options.timings ?? items.timings ?? {};
   const byDecision = Object.fromEntries(DECISIONS.map((decision) => [decision, 0]));
   const byCategory = {};
   for (const item of items) {
@@ -22904,43 +23741,58 @@ async function writeTriageReport(config2, items) {
     byCategory[item.triage.category] = (byCategory[item.triage.category] ?? 0) + 1;
   }
   const report = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
     currentUser: config2.currentUser,
     configPath: config2.__configPath,
+    scope: options.scope || "complete-list",
+    completeList: options.completeList !== false,
     stats: { total: items.length, byDecision, byCategory },
+    fetchSummary: fetchSummaryFor(items, sourceErrors),
+    sourceErrors,
+    requestSummary,
+    timings,
     items
   };
-  const bugsDir = path6.join(config2.outputDir, "bugs");
-  await mkdir3(bugsDir, { recursive: true });
-  await writeJson(path6.join(config2.outputDir, "triage.json"), report);
-  await writeFile3(path6.join(config2.outputDir, "triage.md"), summaryMarkdown(report), "utf8");
+  const bugsDir = path7.join(config2.outputDir, "bugs");
+  await ensurePrivateDirectory(config2.outputDir);
+  await ensurePrivateDirectory(bugsDir);
+  await writeJson(path7.join(config2.outputDir, "triage.json"), report);
+  await secureAtomicWrite(
+    path7.join(config2.outputDir, "triage.md"),
+    summaryMarkdown(report)
+  );
+  const currentNames = new Set(
+    items.map((item) => `${slugify2(item.bug.id, "unknown")}.md`)
+  );
+  if (report.completeList) {
+    await removeStaleBugReports(bugsDir, currentNames);
+  }
   await Promise.all(
     items.map(
-      (item) => writeFile3(
-        path6.join(bugsDir, `${slugify2(item.bug.id, "unknown")}.md`),
-        bugMarkdown(item),
-        "utf8"
+      (item) => secureAtomicWrite(
+        path7.join(bugsDir, `${slugify2(item.bug.id, "unknown")}.md`),
+        bugMarkdown(item)
       )
     )
   );
   return {
     report,
-    jsonPath: path6.join(config2.outputDir, "triage.json"),
-    markdownPath: path6.join(config2.outputDir, "triage.md")
+    jsonPath: path7.join(config2.outputDir, "triage.json"),
+    markdownPath: path7.join(config2.outputDir, "triage.md")
   };
 }
 
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/repository-store.mjs
-import { chmod as chmod2 } from "node:fs/promises";
-import path7 from "node:path";
+import { chmod as chmod4 } from "node:fs/promises";
+import path8 from "node:path";
 async function storeRepositoryByProject(configPath, projectName, repoPath) {
   const name = String(projectName || "").trim();
   const key = repositoryKeyForProject(name);
   if (!key) throw new Error("\u4EE3\u7801\u4ED3\u5E93\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A");
-  const absoluteRepoPath = path7.resolve(repoPath);
+  const absoluteRepoPath = path8.resolve(repoPath);
   const inspected = await inspectRepository({
-    name: path7.basename(absoluteRepoPath),
+    name: path8.basename(absoluteRepoPath),
     repoPath: absoluteRepoPath
   });
   if (!inspected.available) throw new Error(inspected.blocker);
@@ -22950,7 +23802,7 @@ async function storeRepositoryByProject(configPath, projectName, repoPath) {
     [key]: absoluteRepoPath
   };
   await writeJson(configPath, raw);
-  await chmod2(configPath, 384);
+  await chmod4(configPath, 384);
   return {
     projectKey: key,
     projectName: name,
@@ -23054,17 +23906,20 @@ function detectUserHandling(text) {
   }
   return void 0;
 }
-function detectCategory(bug) {
+function detectCategory(bug, aiAnalysis) {
   const supplementedType = bug.userSupplement?.problemType;
+  const semanticType = supplementedType || aiAnalysis?.problemType;
   const supplementedCategory = {
     \u903B\u8F91: "STATE_LOGIC",
     \u6837\u5F0F: "STYLE",
     \u9700\u6C42: "REQUIREMENT"
-  }[supplementedType];
+  }[semanticType];
   if (supplementedCategory) {
     return {
       category: supplementedCategory,
-      hits: [`\u7528\u6237\u8865\u5145\u7C7B\u578B\uFF1A${supplementedType}`],
+      hits: [
+        supplementedType ? `\u7528\u6237\u8865\u5145\u7C7B\u578B\uFF1A${supplementedType}` : `Codex \u8BED\u4E49\u5206\u6790\u7C7B\u578B\uFF1A${semanticType}`
+      ],
       confidence: 1
     };
   }
@@ -23095,8 +23950,8 @@ ${comments}`
   }
   return detailLength >= 30 && bug.steps.length >= 8;
 }
-function classifyBug(bug, repository, policy) {
-  const detected = detectCategory(bug);
+function classifyBug(bug, repository, policy, aiAnalysis) {
+  const detected = detectCategory(bug, aiAnalysis);
   const text = contextText(bug);
   const userHandling = detectUserHandling(text);
   const riskKeywords = [...DEFAULT_HIGH_RISK_KEYWORDS, ...policy.highRiskKeywords ?? []].filter(
@@ -23107,7 +23962,11 @@ function classifyBug(bug, repository, policy) {
   ];
   const questions = [];
   let decision;
-  if (!repository) {
+  if (bug.fetchStatus === "detail_failed") {
+    decision = "BLOCKED";
+    reasons.push("\u7985\u9053\u8BE6\u60C5\u83B7\u53D6\u5931\u8D25\uFF0C\u5F53\u524D\u4EC5\u4FDD\u7559\u5217\u8868\u57FA\u7840\u4FE1\u606F");
+    questions.push("\u53EF\u91CD\u8BD5\u8BE5 Bug \u7684\u8BE6\u60C5\u83B7\u53D6\uFF1B\u8BE6\u60C5\u6210\u529F\u524D\u4E0D\u80FD\u8FDB\u5165\u4FEE\u6539\u9636\u6BB5\u3002");
+  } else if (!repository) {
     decision = "BLOCKED";
     if (!bug.repositoryProject) {
       reasons.push("\u7985\u9053\u8BE6\u60C5\u4E2D\u672A\u8BC6\u522B\u5230\u4EE3\u7801\u4ED3\u5E93\u7EBF\u7D22");
@@ -23130,6 +23989,9 @@ function classifyBug(bug, repository, policy) {
   } else if (typeof bug.severity === "number" && bug.severity <= policy.humanReviewSeverityAtOrBelow) {
     decision = "HUMAN_REQUIRED";
     reasons.push(`\u4E25\u91CD\u7A0B\u5EA6 ${bug.severity} \u8FBE\u5230\u5F3A\u5236\u4EBA\u5DE5\u590D\u6838\u9608\u503C`);
+  } else if (aiAnalysis?.risk === "high") {
+    decision = "HUMAN_REQUIRED";
+    reasons.push("Codex \u8BED\u4E49\u5206\u6790\u5C06\u8BE5 Bug \u6807\u8BB0\u4E3A\u9AD8\u98CE\u9669");
   } else if (bug.userSupplement?.needsConfirmation === false) {
     decision = "AUTO_FIX";
     reasons.push("\u7528\u6237\u5DF2\u5728\u804A\u5929\u4E2D\u8865\u5145\u5173\u952E\u4FE1\u606F\uFF0C\u5E76\u660E\u786E\u8BF4\u660E\u65E0\u9700\u7EE7\u7EED\u786E\u8BA4");
@@ -23138,6 +24000,12 @@ function classifyBug(bug, repository, policy) {
     reasons.push("\u7528\u6237\u5728\u804A\u5929\u4E2D\u6807\u8BB0\u4E3A\u4ECD\u9700\u786E\u8BA4");
     questions.push(
       bug.userSupplement?.note || "\u8BF7\u786E\u8BA4\u4F1A\u6539\u53D8\u5B9E\u73B0\u65B9\u5411\u7684\u4E1A\u52A1\u89C4\u5219\u6216\u4EA4\u4E92\u9884\u671F\u3002"
+    );
+  } else if (aiAnalysis?.needsConfirmation === true) {
+    decision = "NEED_CONFIRM";
+    reasons.push("Codex \u8BED\u4E49\u5206\u6790\u53D1\u73B0\u4F1A\u6539\u53D8\u5B9E\u73B0\u65B9\u5411\u7684\u786E\u8BA4\u70B9");
+    questions.push(
+      aiAnalysis.confirmationQuestion || "\u8BF7\u786E\u8BA4\u4F1A\u6539\u53D8\u5B9E\u73B0\u65B9\u5411\u7684\u4E1A\u52A1\u89C4\u5219\u6216\u4EA4\u4E92\u9884\u671F\u3002"
     );
   } else if (userHandling === "NEED_CONFIRM") {
     decision = "NEED_CONFIRM";
@@ -23186,6 +24054,7 @@ function classifyBug(bug, repository, policy) {
 }
 
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/normalize.mjs
+import { createHash as createHash2 } from "node:crypto";
 var DEFAULT_FIELDS = {
   id: "id",
   title: "title",
@@ -23220,6 +24089,120 @@ function commentText(comment) {
   return stripHtml(
     comment.comment ?? comment.content ?? comment.text ?? comment.desc ?? ""
   );
+}
+function attachmentEntries(value) {
+  if (Array.isArray(value)) return value.map((item, index) => [String(index), item]);
+  if (value && typeof value === "object") return Object.entries(value);
+  return [];
+}
+function normalizeAttachments(value) {
+  return attachmentEntries(value).flatMap(([fallbackId, attachment]) => {
+    if (!attachment || typeof attachment !== "object") return [];
+    const id = printableValue(
+      attachment.id ?? attachment.fileID ?? attachment.fileId ?? fallbackId
+    ).trim();
+    if (!id) return [];
+    const name = printableValue(
+      attachment.name ?? attachment.title ?? attachment.fileName ?? attachment.filename ?? `attachment-${id}`
+    ).trim();
+    const numericSize = Number(attachment.size ?? attachment.fileSize);
+    const result = {
+      id,
+      name,
+      mimeType: printableValue(
+        attachment.mimeType ?? attachment.contentType ?? attachment.mime
+      ).trim(),
+      ...Number.isFinite(numericSize) && numericSize >= 0 ? { size: numericSize } : {}
+    };
+    for (const field of ["downloadUrl", "url", "webPath"]) {
+      const candidate = printableValue(attachment[field]).trim();
+      if (candidate) result[field] = candidate;
+    }
+    return [result];
+  });
+}
+var INLINE_IMAGE_MIME_TYPES = /* @__PURE__ */ new Map([
+  ["png", "image/png"],
+  ["jpg", "image/jpeg"],
+  ["jpeg", "image/jpeg"],
+  ["webp", "image/webp"],
+  ["gif", "image/gif"]
+]);
+function decodeHtmlAttribute(value) {
+  return String(value || "").replace(/&quot;/giu, '"').replace(/&apos;|&#0*39;|&#x0*27;/giu, "'").replace(/&lt;/giu, "<").replace(/&gt;/giu, ">").replace(/&amp;/giu, "&").replace(/&#(\d+);/gu, (_, code) => String.fromCodePoint(Number(code))).replace(/&#x([0-9a-f]+);/giu, (_, code) => String.fromCodePoint(Number.parseInt(code, 16)));
+}
+function imageAttribute(tag, name) {
+  const match = tag.match(
+    new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'=<>]+))`, "iu")
+  );
+  return decodeHtmlAttribute(match?.[1] ?? match?.[2] ?? match?.[3] ?? "").trim();
+}
+function inlineImageId(url) {
+  const pathMatch = url.pathname.match(/(?:^|\/)(?:file-(?:read|download)-)([0-9]+)/iu);
+  const queryId = url.searchParams.get("fileID") || url.searchParams.get("fileId");
+  if (pathMatch?.[1]) return pathMatch[1];
+  if (queryId && /^[0-9]+$/u.test(queryId)) return queryId;
+  return `inline-${createHash2("sha256").update(url.href).digest("hex").slice(0, 12)}`;
+}
+function inlineImageName(url, alt, id) {
+  const encodedPathName = url.pathname.split("/").pop() || "";
+  let pathName = encodedPathName;
+  try {
+    pathName = decodeURIComponent(encodedPathName);
+  } catch {
+  }
+  pathName = pathName.trim();
+  const altExtension = alt.match(/\.([a-z0-9]+)$/iu)?.[1]?.toLocaleLowerCase();
+  if (alt && INLINE_IMAGE_MIME_TYPES.has(altExtension)) return alt;
+  return pathName || alt || `inline-image-${id}`;
+}
+function extractInlineImageAttachments(value, baseUrl) {
+  const html = printableValue(value);
+  return [...html.matchAll(/<img\b[^>]*>/giu)].flatMap((match) => {
+    const source = imageAttribute(match[0], "src");
+    if (!source || /^(?:data|javascript|blob):/iu.test(source)) return [];
+    const absolute = /^[a-z][a-z0-9+.-]*:/iu.test(source) || source.startsWith("//");
+    let url;
+    try {
+      const resolutionBase = baseUrl ? `${String(baseUrl).replace(/\/+$/u, "")}/` : "https://inline-image.invalid/";
+      url = new URL(source, resolutionBase);
+    } catch {
+      return [];
+    }
+    if (!["http:", "https:"].includes(url.protocol)) return [];
+    const id = inlineImageId(url);
+    const name = inlineImageName(url, imageAttribute(match[0], "alt"), id);
+    const extension = name.match(/\.([a-z0-9]+)$/iu)?.[1]?.toLocaleLowerCase();
+    return [{
+      id,
+      name,
+      mimeType: INLINE_IMAGE_MIME_TYPES.get(extension) || "",
+      ...absolute ? { url: source } : { webPath: `${url.pathname}${url.search}` },
+      source: "inline-html"
+    }];
+  });
+}
+function mergeAttachments(...groups) {
+  const merged = [];
+  for (const attachment of groups.flat()) {
+    const location = attachment.downloadUrl || attachment.url || attachment.webPath;
+    const existing = merged.find((candidate) => candidate.id === attachment.id || location && location === (candidate.downloadUrl || candidate.url || candidate.webPath));
+    if (!existing) {
+      merged.push({ ...attachment });
+      continue;
+    }
+    for (const [key, value] of Object.entries(attachment)) {
+      if ((existing[key] == null || existing[key] === "") && value != null && value !== "") {
+        existing[key] = value;
+      }
+    }
+  }
+  return merged;
+}
+function commentHtml(comment) {
+  if (typeof comment === "string") return comment;
+  if (!comment || typeof comment !== "object") return "";
+  return comment.comment ?? comment.content ?? comment.text ?? comment.desc ?? "";
 }
 var REPOSITORY_LABELS = [
   "\u95EE\u9898\u4EE3\u7801\u4ED3\u5E93",
@@ -23281,13 +24264,21 @@ function extractRepositoryProjectDetails({
     source: ""
   };
 }
-function normalizeBug(raw, fields = {}) {
+function normalizeBug(raw, fields = {}, options = {}) {
   const mergedFields = { ...DEFAULT_FIELDS, ...fields };
   const id = printableValue(mapped(raw, mergedFields, "id")).trim();
   const comments = mapped(raw, mergedFields, "comments") ?? [];
-  const title = stripHtml(mapped(raw, mergedFields, "title"));
-  const description = stripHtml(mapped(raw, mergedFields, "description"));
-  const steps = stripHtml(mapped(raw, mergedFields, "steps"));
+  const rawTitle = mapped(raw, mergedFields, "title");
+  const rawDescription = mapped(raw, mergedFields, "description");
+  const rawSteps = mapped(raw, mergedFields, "steps");
+  const title = stripHtml(rawTitle);
+  const description = stripHtml(rawDescription);
+  const steps = stripHtml(rawSteps);
+  const explicitAttachments = normalizeAttachments(
+    mapped(raw, mergedFields, "attachments")
+  );
+  const commentValues = (Array.isArray(comments) ? comments : [comments]).map(commentHtml);
+  const inlineAttachments = [rawDescription, rawSteps, ...commentValues].flatMap((value) => extractInlineImageAttachments(value, options.baseUrl));
   const repositoryProject = extractRepositoryProjectDetails({
     comments,
     description,
@@ -23315,11 +24306,13 @@ function normalizeBug(raw, fields = {}) {
     status: printableValue(mapped(raw, mergedFields, "status")).trim(),
     assignee: printableValue(mapped(raw, mergedFields, "assignee")).trim(),
     url: printableValue(mapped(raw, mergedFields, "url")).trim(),
-    attachments: mapped(raw, mergedFields, "attachments") ?? [],
+    attachments: mergeAttachments(explicitAttachments, inlineAttachments),
     comments,
     repositoryProject: repositoryProject.name,
     repositoryProjectSource: repositoryProject.source,
-    repositoryProjectLabel: repositoryProject.label
+    repositoryProjectLabel: repositoryProject.label,
+    fetchStatus: raw.__fetchStatus || "complete",
+    ...raw.__fetchError ? { fetchError: raw.__fetchError } : {}
   };
 }
 function normalizeAndFilterBugs(rawBugs, config2) {
@@ -23328,7 +24321,9 @@ function normalizeAndFilterBugs(rawBugs, config2) {
   );
   const currentUser = config2.currentUser.toLocaleLowerCase();
   const seen = /* @__PURE__ */ new Set();
-  return rawBugs.map((raw) => normalizeBug(raw, config2.source.fields)).filter((bug) => {
+  return rawBugs.map((raw) => normalizeBug(raw, config2.source.fields, {
+    baseUrl: config2.source.baseUrl
+  })).filter((bug) => {
     if (!bug.id || seen.has(bug.id)) return false;
     seen.add(bug.id);
     if (closed.has(bug.status.toLocaleLowerCase())) return false;
@@ -23364,23 +24359,46 @@ async function retriageExistingItems(config2, existingItems) {
       bug,
       repositoryKey,
       repository,
-      triage: classifyBug(bug, repository, config2.policy)
+      triage: classifyBug(bug, repository, config2.policy, existingItem.aiAnalysis)
     };
   }));
 }
 async function triageBugs(config2, options = {}) {
-  const rawBugs = await loadRawBugs(config2, options);
-  const bugs = normalizeAndFilterBugs(rawBugs, config2);
-  return retriageExistingItems(
+  const loaded = await loadRawBugsWithMetadata(config2, options);
+  const bugs = normalizeAndFilterBugs(loaded.items, config2);
+  const items = await retriageExistingItems(
     config2,
     bugs.map((bug) => ({ bug }))
   );
+  Object.defineProperty(items, "sourceErrors", {
+    value: loaded.sourceErrors ?? [],
+    enumerable: false
+  });
+  Object.defineProperty(items, "requestSummary", {
+    value: { ...loaded.requestSummary ?? {}, matchedBugCount: items.length },
+    enumerable: false
+  });
+  Object.defineProperty(items, "timings", {
+    value: loaded.timings ?? {},
+    enumerable: false
+  });
+  return items;
+}
+async function triageBugById(config2, bugId, options = {}) {
+  const rawBug = await loadRawBugById(config2, bugId, options);
+  const [bug] = normalizeAndFilterBugs([rawBug], config2);
+  const assignedToCurrentUser = config2.source.filterAssignedToCurrentUser === false || bug?.assignee?.toLocaleLowerCase() === config2.currentUser.toLocaleLowerCase();
+  if (!bug || !assignedToCurrentUser) {
+    throw new Error(`Bug ${bugId} \u5DF2\u5173\u95ED\u3001\u672A\u6307\u6D3E\u7ED9\u5F53\u524D\u8D26\u53F7\u6216\u4E0D\u5B58\u5728`);
+  }
+  const [item] = await retriageExistingItems(config2, [{ bug }]);
+  return item;
 }
 
 // plugins/one-click-repair/skills/zentao-frontend-bugfix/scripts/lib/workspace.mjs
 import { access as access3 } from "node:fs/promises";
 import { constants as constants2 } from "node:fs";
-import path8 from "node:path";
+import path9 from "node:path";
 var AUTHORIZATION_BASES = /* @__PURE__ */ new Set([
   "explicit-confirmation",
   "user-provided-solution"
@@ -23393,7 +24411,7 @@ async function selectCurrentWorkspace(config2, reportPath, bugId, options = {}) 
   if (!AUTHORIZATION_BASES.has(authorizationBasis)) {
     throw new Error(`\u4E0D\u652F\u6301\u7684\u4FEE\u6539\u6388\u6743\u4F9D\u636E\uFF1A${authorizationBasis}`);
   }
-  const report = await readJson(reportPath);
+  const report = await readTriageReport(reportPath);
   const item = report.items.find((candidate) => String(candidate.bug.id) === String(bugId));
   if (!item) throw new Error(`\u5206\u8BCA\u62A5\u544A\u4E2D\u627E\u4E0D\u5230 Bug\uFF1A${bugId}`);
   if (item.triage.decision === "BLOCKED") {
@@ -23421,7 +24439,7 @@ async function selectCurrentWorkspace(config2, reportPath, bugId, options = {}) 
     },
     verificationMode: "code-logic-review"
   };
-  const metadataPath = path8.join(
+  const metadataPath = path9.join(
     config2.outputDir,
     "workspaces",
     `${slugify2(item.bug.id, "unknown")}.json`
@@ -23432,17 +24450,17 @@ async function selectCurrentWorkspace(config2, reportPath, bugId, options = {}) 
 
 // plugins/one-click-repair/scripts/mcp-server.mjs
 var SERVER_NAME = "one-click-repair";
-var SERVER_VERSION = "0.7.3";
+var SERVER_VERSION = "0.11.0";
 var optionalConfigPathSchema = {
   config_path: string2().min(1).optional().describe("\u53EF\u9009\u7684\u7985\u9053\u914D\u7F6E\u7EDD\u5BF9\u8DEF\u5F84\uFF1B\u65E5\u5E38\u4F7F\u7528\u65F6\u4E0D\u8981\u4F20")
 };
-function toolResult(data, message) {
+function toolResult(data, message, options = {}) {
   return {
     structuredContent: data,
     content: [
       {
         type: "text",
-        text: `${message}
+        text: options.includeJson === false ? message : `${message}
 ${JSON.stringify(data, null, 2)}`
       }
     ]
@@ -23451,7 +24469,7 @@ ${JSON.stringify(data, null, 2)}`
 async function hasNonEmptyFile(filePath) {
   if (!filePath) return false;
   try {
-    return Boolean((await readFile4(filePath, "utf8")).trim());
+    return Boolean((await readFile5(filePath, "utf8")).trim());
   } catch {
     return false;
   }
@@ -23466,24 +24484,47 @@ async function resolveConfig(configPath) {
   };
 }
 async function readCurrentReport(config2, reportPath) {
-  const expectedReportPath = path9.resolve(config2.outputDir, "triage.json");
-  const requestedReportPath = path9.resolve(reportPath);
+  const expectedReportPath = path10.resolve(config2.outputDir, "triage.json");
+  const requestedReportPath = path10.resolve(reportPath);
   if (requestedReportPath !== expectedReportPath) {
     throw new Error(`report_path \u5FC5\u987B\u662F\u672C\u6B21\u914D\u7F6E\u751F\u6210\u7684\u5206\u8BCA\u62A5\u544A\uFF1A${expectedReportPath}`);
   }
   return {
     reportPath: requestedReportPath,
-    report: await readJson(requestedReportPath)
+    report: await readTriageReport(requestedReportPath)
   };
 }
-async function collectTriage(config2) {
+async function readExistingCurrentReport(config2, reportPath) {
+  try {
+    return await readCurrentReport(
+      config2,
+      reportPath || path10.resolve(config2.outputDir, "triage.json")
+    );
+  } catch (error2) {
+    if (!reportPath && error2.code === "ENOENT") return void 0;
+    throw error2;
+  }
+}
+async function collectTriage(config2, onProgress) {
   const token = await ensureZentaoToken(config2);
-  const triage = await withAutomaticTokenRefresh(config2, () => triageBugs(config2));
-  const written = await writeTriageReport(config2, triage.value);
+  onProgress?.("\u8BA4\u8BC1\u5B8C\u6210\uFF0C\u6B63\u5728\u8BFB\u53D6\u6307\u6D3E\u7ED9\u6211\u7684 Bug");
+  const triage = await withAutomaticTokenRefresh(
+    config2,
+    () => triageBugs(config2, { onProgress })
+  );
+  const written = await writeTriageReport(config2, triage.value, {
+    sourceErrors: triage.value.sourceErrors,
+    requestSummary: triage.value.requestSummary,
+    timings: triage.value.timings
+  });
   return {
     reportPath: written.jsonPath,
     summaryPath: written.markdownPath,
     stats: written.report.stats,
+    fetchSummary: written.report.fetchSummary,
+    sourceErrors: written.report.sourceErrors,
+    requestSummary: written.report.requestSummary,
+    timings: written.report.timings,
     items: written.report.items,
     tokenSource: token.source,
     tokenAutoRefreshed: Boolean(token.refreshed || triage.tokenAutoRefreshed)
@@ -23514,25 +24555,127 @@ async function getZentaoAuthStatus(input = {}) {
     };
   }
 }
-async function listMyZentaoBugs(input = {}) {
+async function listMyZentaoBugs(input = {}, options = {}) {
   const { configPath, config: config2 } = await resolveConfig(input.config_path);
+  const parsedCursor = Number(input.cursor ?? 0);
+  const cursor = Number.isSafeInteger(parsedCursor) && parsedCursor >= 0 ? parsedCursor : 0;
+  let result;
+  if (input.response_mode === "summary" && cursor > 0) {
+    const existing = await readCurrentReport(
+      config2,
+      path10.resolve(config2.outputDir, "triage.json")
+    );
+    result = {
+      configPath,
+      reportPath: existing.reportPath,
+      summaryPath: path10.resolve(config2.outputDir, "triage.md"),
+      stats: existing.report.stats,
+      fetchSummary: existing.report.fetchSummary,
+      sourceErrors: existing.report.sourceErrors,
+      requestSummary: existing.report.requestSummary,
+      timings: existing.report.timings,
+      items: existing.report.items,
+      tokenSource: "not-requested",
+      tokenAutoRefreshed: false,
+      zentaoRequested: false
+    };
+  } else {
+    result = {
+      configPath,
+      ...await collectTriage(config2, options.onProgress),
+      zentaoRequested: true
+    };
+  }
+  if (input.response_mode !== "summary") return result;
+  const parsedLimit = Number(input.limit ?? 50);
+  const limit = Number.isSafeInteger(parsedLimit) && parsedLimit >= 1 ? Math.min(parsedLimit, 100) : 50;
+  const pageItems = result.items.slice(cursor, cursor + limit).map((item) => ({
+    bugId: item.bug.id,
+    title: item.bug.title,
+    repositoryProject: item.bug.repositoryProject,
+    repositoryProjectSource: item.bug.repositoryProjectSource,
+    execution: item.bug.execution,
+    executionName: item.bug.executionName,
+    affectedVersion: item.bug.affectedVersion,
+    fetchStatus: item.bug.fetchStatus || "complete",
+    attachmentCount: item.bug.attachments?.length ?? 0,
+    triage: item.triage,
+    repository: item.repository ? {
+      name: item.repository.name,
+      projectKey: item.repository.projectKey,
+      available: item.repository.available
+    } : void 0
+  }));
+  const nextOffset = cursor + pageItems.length;
   return {
-    configPath,
-    ...await collectTriage(config2)
+    configPath: result.configPath,
+    reportPath: result.reportPath,
+    summaryPath: result.summaryPath,
+    stats: result.stats,
+    fetchSummary: result.fetchSummary,
+    sourceErrors: result.sourceErrors,
+    requestSummary: result.requestSummary,
+    timings: result.timings,
+    tokenSource: result.tokenSource,
+    tokenAutoRefreshed: result.tokenAutoRefreshed,
+    zentaoRequested: result.zentaoRequested,
+    responseMode: "summary",
+    cursor: String(cursor),
+    nextCursor: nextOffset < result.items.length ? String(nextOffset) : void 0,
+    items: pageItems
   };
 }
 async function getZentaoBugDetail(input) {
-  const result = await listMyZentaoBugs(input);
-  const item = result.items.find(
-    (candidate) => String(candidate.bug.id) === String(input.bug_id)
+  const { configPath, config: config2 } = await resolveConfig(input.config_path);
+  const existing = await readExistingCurrentReport(config2, input.report_path);
+  const bugId = String(input.bug_id);
+  const cachedItem = existing?.report.items.find(
+    (candidate) => String(candidate.bug.id) === bugId
   );
-  if (!item) {
-    throw new Error(`\u5F53\u524D\u5206\u914D\u7ED9\u4F60\u7684\u672A\u5173\u95ED Bug \u4E2D\u4E0D\u5B58\u5728 ${input.bug_id}`);
+  if (cachedItem && input.refresh !== true) {
+    return {
+      configPath,
+      reportPath: existing.reportPath,
+      summaryPath: path10.resolve(config2.outputDir, "triage.md"),
+      source: "local-report",
+      zentaoRequested: false,
+      item: cachedItem
+    };
   }
+  await ensureZentaoToken(config2);
+  const refreshed = await withAutomaticTokenRefresh(
+    config2,
+    () => triageBugById(config2, bugId)
+  );
+  const refreshedBug = {
+    ...refreshed.value.bug,
+    ...cachedItem?.bug?.userSupplement ? { userSupplement: cachedItem.bug.userSupplement } : {}
+  };
+  const [refreshedItem] = await retriageExistingItems(config2, [
+    {
+      ...refreshed.value,
+      ...cachedItem?.aiAnalysis ? { aiAnalysis: cachedItem.aiAnalysis } : {},
+      bug: refreshedBug
+    }
+  ]);
+  const items = existing ? cachedItem ? existing.report.items.map(
+    (candidate) => String(candidate.bug.id) === bugId ? refreshedItem : candidate
+  ) : [...existing.report.items, refreshedItem] : [refreshedItem];
+  const written = await writeTriageReport(config2, items, {
+    scope: existing?.report.scope || "single-bug",
+    completeList: existing?.report.completeList ?? false,
+    sourceErrors: existing?.report.sourceErrors || [],
+    requestSummary: existing?.report.requestSummary || {},
+    timings: existing?.report.timings || {}
+  });
   return {
-    reportPath: result.reportPath,
-    summaryPath: result.summaryPath,
-    item
+    configPath,
+    reportPath: written.jsonPath,
+    summaryPath: written.markdownPath,
+    source: "zentao-detail",
+    zentaoRequested: true,
+    tokenAutoRefreshed: refreshed.tokenAutoRefreshed,
+    item: refreshedItem
   };
 }
 async function getRepositoryByProject(input) {
@@ -23588,7 +24731,13 @@ async function setRepositoryByProject(input) {
   if (existingReport) {
     const config2 = await loadConfig(configPath);
     const items = await retriageExistingItems(config2, existingReport.items);
-    const written = await writeTriageReport(config2, items);
+    const written = await writeTriageReport(config2, items, {
+      scope: existingReport.scope,
+      completeList: existingReport.completeList,
+      sourceErrors: existingReport.sourceErrors,
+      requestSummary: existingReport.requestSummary,
+      timings: existingReport.timings
+    });
     reportRefresh = {
       refreshed: true,
       source: "local-report",
@@ -23641,7 +24790,13 @@ async function applyBugUserSupplement(input) {
     };
   });
   const items = await retriageExistingItems(config2, updatedItems);
-  const written = await writeTriageReport(config2, items);
+  const written = await writeTriageReport(config2, items, {
+    scope: report.scope,
+    completeList: report.completeList,
+    sourceErrors: report.sourceErrors,
+    requestSummary: report.requestSummary,
+    timings: report.timings
+  });
   const updatedItem = written.report.items.find(
     (candidate) => String(candidate.bug.id) === bugId
   );
@@ -23654,6 +24809,97 @@ async function applyBugUserSupplement(input) {
     summaryPath: written.markdownPath,
     stats: written.report.stats,
     item: updatedItem
+  };
+}
+async function recordBugAnalyses(input) {
+  const { configPath, config: config2 } = await resolveConfig(input.config_path);
+  const { report } = await readCurrentReport(config2, input.report_path);
+  const analyses = input.analyses ?? [];
+  const bugIds = analyses.map((analysis) => String(analysis.bug_id));
+  if (new Set(bugIds).size !== bugIds.length) {
+    throw new Error("\u540C\u4E00\u6B21\u5206\u6790\u4FDD\u5B58\u4E2D\u4E0D\u80FD\u5305\u542B\u91CD\u590D\u7684 Bug ID");
+  }
+  const knownIds = new Set(report.items.map((item) => String(item.bug.id)));
+  const missing = bugIds.filter((bugId) => !knownIds.has(bugId));
+  if (missing.length) {
+    throw new Error(`\u5206\u8BCA\u62A5\u544A\u4E2D\u627E\u4E0D\u5230 Bug\uFF1A${missing.join("\u3001")}`);
+  }
+  const analyzedAt = (/* @__PURE__ */ new Date()).toISOString();
+  const analysesById = new Map(
+    analyses.map((analysis) => [
+      String(analysis.bug_id),
+      {
+        summary: analysis.summary.trim(),
+        problemType: analysis.problem_type,
+        ...analysis.subtype ? { subtype: analysis.subtype.trim() } : {},
+        needsConfirmation: analysis.needs_confirmation,
+        ...analysis.confirmation_question ? { confirmationQuestion: analysis.confirmation_question.trim() } : {},
+        evidence: analysis.evidence.map((value) => value.trim()),
+        ...analysis.proposed_change ? { proposedChange: analysis.proposed_change.trim() } : {},
+        risk: analysis.risk,
+        analyzedAt,
+        source: "codex"
+      }
+    ])
+  );
+  const updatedItems = report.items.map((item) => {
+    const aiAnalysis = analysesById.get(String(item.bug.id));
+    return aiAnalysis ? { ...item, aiAnalysis } : item;
+  });
+  const items = await retriageExistingItems(config2, updatedItems);
+  const written = await writeTriageReport(config2, items, {
+    scope: report.scope,
+    completeList: report.completeList,
+    sourceErrors: report.sourceErrors,
+    requestSummary: report.requestSummary,
+    timings: report.timings
+  });
+  return {
+    updated: true,
+    source: "codex-analysis",
+    zentaoRequested: false,
+    configPath,
+    reportPath: written.jsonPath,
+    summaryPath: written.markdownPath,
+    count: analyses.length,
+    results: bugIds.map((bugId) => {
+      const item = written.report.items.find(
+        (candidate) => String(candidate.bug.id) === bugId
+      );
+      return {
+        bugId,
+        category: item.triage.category,
+        decision: item.triage.decision,
+        needsConfirmation: item.aiAnalysis.needsConfirmation
+      };
+    })
+  };
+}
+async function getZentaoBugAttachment(input, options = {}) {
+  const { configPath, config: config2 } = await resolveConfig(input.config_path);
+  const { report } = await readCurrentReport(config2, input.report_path);
+  const bugId = String(input.bug_id);
+  const item = report.items.find(
+    (candidate) => String(candidate.bug.id) === bugId
+  );
+  if (!item) throw new Error(`\u5206\u8BCA\u62A5\u544A\u4E2D\u627E\u4E0D\u5230 Bug\uFF1A${bugId}`);
+  const attachment = findBugAttachment(item, input.attachment_id);
+  const ensureToken = options.ensureToken || ensureZentaoToken;
+  const withTokenRefresh = options.withTokenRefresh || (config2.source.type === "zentao-v1" ? withAutomaticTokenRefresh : async (_config, operation) => ({
+    value: await operation(),
+    tokenAutoRefreshed: false
+  }));
+  if (config2.source.type === "zentao-v1") await ensureToken(config2);
+  const downloaded = await withTokenRefresh(
+    config2,
+    () => downloadBugImage(config2, bugId, attachment, options),
+    options.authOptions
+  );
+  return {
+    configPath,
+    reportPath: input.report_path,
+    tokenAutoRefreshed: downloaded.tokenAutoRefreshed,
+    ...downloaded.value
   };
 }
 async function selectWorkspaceForBug(input) {
@@ -23673,7 +24919,7 @@ function createOneClickRepairServer() {
       version: SERVER_VERSION
     },
     {
-      instructions: "\u5148\u8C03\u7528 zentao_list_my_bugs \u62C9\u53D6\u5E76\u9010\u6761\u8BED\u4E49\u5206\u6790 Bug\uFF0C\u4ECE\u8BC4\u8BBA\u3001\u63CF\u8FF0\u548C\u590D\u73B0\u6B65\u9AA4\u4E2D\u7684\u4EE3\u7801\u4ED3\u5E93\u7EBF\u7D22\u8BC6\u522B\u524D\u7AEF\u9879\u76EE\uFF0C\u5E76\u6309\u9879\u76EE\u6620\u5C04\u672C\u5730\u4ED3\u5E93\uFF0C\u518D\u5411\u7528\u6237\u5C55\u793A\u53EF\u76F4\u63A5\u4FEE\u6539\u3001\u7B49\u5F85\u786E\u8BA4\u3001\u4EBA\u5DE5\u5904\u7406\u548C\u4ED3\u5E93\u5F85\u914D\u7F6E\u6E05\u5355\u3002\u7528\u6237\u53EF\u76F4\u63A5\u5728\u804A\u5929\u4E2D\u7EA0\u6B63\u4ED3\u5E93\u3001\u95EE\u9898\u7C7B\u578B\u548C\u786E\u8BA4\u72B6\u6001\uFF1B\u8C03\u7528 bug_apply_user_supplement \u5728\u672C\u5730\u5237\u65B0\u73B0\u6709\u62A5\u544A\uFF0C\u4E0D\u8981\u6C42\u56DE\u5199\u7985\u9053\uFF0C\u4E5F\u4E0D\u91CD\u65B0\u62C9\u53D6\u3002\u7528\u6237\u63D0\u4F9B\u4ED3\u5E93\u8DEF\u5F84\u540E\uFF0C\u8C03\u7528 repository_set_by_project \u5E76\u4F20\u5165\u672C\u6B21 report_path\u3002\u7528\u6237\u770B\u8FC7\u9884\u89C8\u540E\uFF0C\u53EA\u8981\u9488\u5BF9\u5177\u4F53 Bug \u660E\u786E\u786E\u8BA4\u4FEE\u6539\uFF0C\u6216\u76F4\u63A5\u63D0\u51FA\u5177\u4F53\u4FEE\u6539\u65B9\u6848\uFF0C\u5C31\u5DF2\u7ECF\u5B8C\u6210\u6388\u6743\uFF1B\u7ACB\u5373\u8C03\u7528 workspace_select_for_bug\uFF0C\u6309\u60C5\u51B5\u4F20\u5165 explicit-confirmation \u6216 user-provided-solution\uFF0C\u7EDD\u4E0D\u80FD\u518D\u6B21\u7D22\u8981\u786E\u8BA4\u3002NEED_CONFIRM \u548C HUMAN_REQUIRED \u662F\u9ED8\u8BA4\u5206\u8BCA\u5EFA\u8BAE\uFF0C\u4E0D\u662F\u7528\u6237\u6388\u6743\u540E\u7684\u6B7B\u95E8\u7981\uFF1B\u53EA\u6709 BLOCKED \u4ECD\u7981\u6B62\u4FEE\u6539\u3002\u4E0D\u5F97\u663E\u793A\u8D26\u53F7\u3001\u5BC6\u7801\u6216 Token\uFF0C\u4E0D\u64CD\u4F5C Git\uFF0C\u4E0D\u8FD0\u884C\u76EE\u6807\u9879\u76EE\u811A\u672C\u3002"
+      instructions: "\u5148\u7528 zentao_list_my_bugs \u7684 summary \u6A21\u5F0F\u62C9\u53D6\u5206\u9875\u6458\u8981\uFF0C\u518D\u6309 Bug ID \u8C03\u7528 zentao_get_bug_detail \u4ECE\u672C\u5730\u62A5\u544A\u8BFB\u53D6\u5B8C\u6574\u4FE1\u606F\uFF1B\u53EA\u6709\u622A\u56FE\u5F71\u54CD\u5224\u65AD\u65F6\u624D\u8BFB\u53D6\u56FE\u7247\u9644\u4EF6\u3002\u9010\u6761\u8BED\u4E49\u5206\u6790\u540E\uFF0C\u7528 bug_record_analyses \u6279\u91CF\u6301\u4E45\u5316\uFF0C\u518D\u5C55\u793A\u53EF\u76F4\u63A5\u4FEE\u6539\u3001\u7B49\u5F85\u786E\u8BA4\u3001\u4EBA\u5DE5\u5904\u7406\u3001\u8BE6\u60C5\u5931\u8D25\u548C\u4ED3\u5E93\u5F85\u914D\u7F6E\u6E05\u5355\u3002\u8BE6\u60C5\u5931\u8D25\u9879\u4FDD\u6301 BLOCKED\uFF0C\u53EF\u6309 Bug \u5355\u72EC refresh \u91CD\u8BD5\u3002\u7528\u6237\u53EF\u76F4\u63A5\u5728\u804A\u5929\u4E2D\u7EA0\u6B63\u4ED3\u5E93\u3001\u95EE\u9898\u7C7B\u578B\u548C\u786E\u8BA4\u72B6\u6001\uFF1B\u8C03\u7528 bug_apply_user_supplement \u5728\u672C\u5730\u5237\u65B0\u73B0\u6709\u62A5\u544A\uFF0C\u4E0D\u8981\u6C42\u56DE\u5199\u7985\u9053\uFF0C\u4E5F\u4E0D\u91CD\u65B0\u62C9\u53D6\u3002\u7528\u6237\u63D0\u4F9B\u4ED3\u5E93\u8DEF\u5F84\u540E\uFF0C\u8C03\u7528 repository_set_by_project \u5E76\u4F20\u5165\u672C\u6B21 report_path\u3002\u7528\u6237\u770B\u8FC7\u9884\u89C8\u540E\uFF0C\u53EA\u8981\u9488\u5BF9\u5177\u4F53 Bug \u660E\u786E\u786E\u8BA4\u4FEE\u6539\uFF0C\u6216\u76F4\u63A5\u63D0\u51FA\u5177\u4F53\u4FEE\u6539\u65B9\u6848\uFF0C\u5C31\u5DF2\u7ECF\u5B8C\u6210\u6388\u6743\uFF1B\u7ACB\u5373\u8C03\u7528 workspace_select_for_bug\uFF0C\u6309\u60C5\u51B5\u4F20\u5165 explicit-confirmation \u6216 user-provided-solution\uFF0C\u7EDD\u4E0D\u80FD\u518D\u6B21\u7D22\u8981\u786E\u8BA4\u3002NEED_CONFIRM \u548C HUMAN_REQUIRED \u662F\u9ED8\u8BA4\u5206\u8BCA\u5EFA\u8BAE\uFF0C\u4E0D\u662F\u7528\u6237\u6388\u6743\u540E\u7684\u6B7B\u95E8\u7981\uFF1B\u53EA\u6709 BLOCKED \u4ECD\u7981\u6B62\u4FEE\u6539\u3002\u4E0D\u5F97\u663E\u793A\u8D26\u53F7\u3001\u5BC6\u7801\u6216 Token\uFF0C\u4E0D\u64CD\u4F5C Git\uFF0C\u4E0D\u8FD0\u884C\u76EE\u6807\u9879\u76EE\u811A\u672C\u3002"
     }
   );
   server.registerTool(
@@ -23698,17 +24944,36 @@ function createOneClickRepairServer() {
     {
       title: "\u62C9\u53D6\u5E76\u9884\u5206\u8BCA\u6211\u7684\u7985\u9053 Bug",
       description: "\u62C9\u53D6\u7985\u9053\u4E2D\u6307\u6D3E\u7ED9\u5F53\u524D\u7528\u6237\u7684\u672A\u5173\u95ED Bug\uFF0C\u8865\u5145\u8BE6\u60C5\u3001\u4ED3\u5E93\u6620\u5C04\u548C\u89C4\u5219\u9884\u5206\u8BCA\uFF0C\u5E76\u751F\u6210\u672C\u5730\u62A5\u544A\u3002\u8BED\u4E49\u5206\u7C7B\u4ECD\u7531 Codex\u9010\u6761\u5B8C\u6210\u3002",
-      inputSchema: optionalConfigPathSchema,
+      inputSchema: {
+        response_mode: _enum(["full", "summary"]).optional().describe("\u8FD4\u56DE\u5B8C\u6574\u6761\u76EE\u6216\u5206\u9875\u6458\u8981\uFF1B\u9ED8\u8BA4 full \u517C\u5BB9\u65E7\u8C03\u7528"),
+        cursor: string2().regex(/^\d+$/u).optional().describe("summary \u6A21\u5F0F\u7684\u96F6\u57FA\u504F\u79FB\u6E38\u6807"),
+        limit: number2().int().min(1).max(100).optional().describe("summary \u6A21\u5F0F\u6BCF\u9875\u6570\u91CF\uFF0C\u9ED8\u8BA4 50\uFF0C\u6700\u5927 100"),
+        ...optionalConfigPathSchema
+      },
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
         openWorldHint: true
       }
     },
-    async (input) => toolResult(
-      await listMyZentaoBugs(input),
-      "\u5DF2\u62C9\u53D6\u5E76\u751F\u6210\u7985\u9053 Bug \u9884\u5206\u8BCA\u62A5\u544A\u3002"
-    )
+    async (input, extra) => {
+      const onProgress = (message) => {
+        void Promise.resolve(
+          server.sendLoggingMessage(
+            { level: "info", data: { stage: "zentao-list", message } },
+            extra?.sessionId
+          )
+        ).catch(() => {
+        });
+      };
+      const result = await listMyZentaoBugs(input, { onProgress });
+      const elapsed = Number.isFinite(result.timings?.totalMs) ? `\uFF0C\u8017\u65F6 ${(result.timings.totalMs / 1e3).toFixed(2)} \u79D2` : "";
+      return toolResult(
+        result,
+        result.responseMode === "summary" ? `\u5DF2\u76F4\u63A5\u8BFB\u53D6\u6307\u6D3E\u7ED9\u6211\u7684 Bug \u5E76\u751F\u6210\u9884\u5206\u8BCA\u62A5\u544A${elapsed}\uFF1B\u672C\u9875\u8FD4\u56DE ${result.items.length} \u6761\u6458\u8981\u3002` : `\u5DF2\u76F4\u63A5\u8BFB\u53D6\u6307\u6D3E\u7ED9\u6211\u7684 Bug \u5E76\u751F\u6210\u9884\u5206\u8BCA\u62A5\u544A${elapsed}\u3002`,
+        { includeJson: result.responseMode !== "summary" }
+      );
+    }
   );
   server.registerTool(
     "zentao_get_bug_detail",
@@ -23717,6 +24982,8 @@ function createOneClickRepairServer() {
       description: "\u6839\u636E Bug ID \u83B7\u53D6\u5F53\u524D\u7528\u6237\u672A\u5173\u95ED Bug \u7684\u5B8C\u6574\u63CF\u8FF0\u3001\u6B65\u9AA4\u3001\u8BC4\u8BBA\u3001\u6240\u5C5E\u9879\u76EE\u3001\u6267\u884C\u548C\u9884\u5206\u8BCA\u4FE1\u606F\u3002",
       inputSchema: {
         bug_id: string2().min(1).describe("\u7985\u9053 Bug ID"),
+        report_path: string2().min(1).optional().describe("\u53EF\u9009\u7684\u5F53\u524D\u5206\u8BCA\u62A5\u544A\u8DEF\u5F84\uFF1B\u547D\u4E2D\u65F6\u76F4\u63A5\u8BFB\u53D6\u672C\u5730\u62A5\u544A"),
+        refresh: boolean2().optional().describe("\u662F\u5426\u5FFD\u7565\u672C\u5730\u62A5\u544A\u5E76\u53EA\u5237\u65B0\u8BE5 Bug \u7684\u7985\u9053\u8BE6\u60C5"),
         ...optionalConfigPathSchema
       },
       annotations: {
@@ -23800,6 +25067,80 @@ function createOneClickRepairServer() {
     )
   );
   server.registerTool(
+    "bug_record_analyses",
+    {
+      title: "\u6301\u4E45\u5316 Codex \u5BF9 Bug \u7684\u8BED\u4E49\u5206\u6790",
+      description: "\u5C06 Codex \u9010\u6761\u5F62\u6210\u7684\u6838\u5FC3\u95EE\u9898\u3001\u7528\u6237\u7C7B\u578B\u3001\u786E\u8BA4\u70B9\u3001\u8BC1\u636E\u3001\u5EFA\u8BAE\u4FEE\u6539\u548C\u98CE\u9669\u6279\u91CF\u5199\u5165\u5F53\u524D\u672C\u5730\u62A5\u544A\uFF1B\u4E0D\u8BBF\u95EE\u6216\u56DE\u5199\u7985\u9053\u3002",
+      inputSchema: {
+        report_path: string2().min(1).describe("\u5F53\u524D\u5206\u8BCA\u62A5\u544A\u7684\u7EDD\u5BF9\u8DEF\u5F84"),
+        analyses: array(
+          object2({
+            bug_id: string2().min(1).describe("Bug ID"),
+            summary: string2().min(1).max(1e3).describe("\u6838\u5FC3\u95EE\u9898\u6458\u8981"),
+            problem_type: _enum(["\u903B\u8F91", "\u6837\u5F0F", "\u9700\u6C42"]),
+            subtype: string2().min(1).max(100).optional(),
+            needs_confirmation: boolean2(),
+            confirmation_question: string2().min(1).max(1e3).optional(),
+            evidence: array(string2().min(1).max(500)).max(10),
+            proposed_change: string2().min(1).max(2e3).optional(),
+            risk: _enum(["low", "medium", "high"])
+          })
+        ).min(1).max(50),
+        ...optionalConfigPathSchema
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: false
+      }
+    },
+    async (input) => toolResult(
+      await recordBugAnalyses(input),
+      `\u5DF2\u5C06 ${input.analyses.length} \u6761 Codex \u8BED\u4E49\u5206\u6790\u5199\u5165\u672C\u5730\u62A5\u544A\u3002`,
+      { includeJson: false }
+    )
+  );
+  server.registerTool(
+    "zentao_get_bug_attachment",
+    {
+      title: "\u8BFB\u53D6\u7985\u9053 Bug \u56FE\u7247\u9644\u4EF6",
+      description: "\u53EA\u8BFB\u53D6\u5F53\u524D\u62A5\u544A\u4E2D\u5DF2\u58F0\u660E\u4E14\u4E0E\u7985\u9053\u540C\u6E90\u7684 PNG\u3001JPEG\u3001WebP \u6216 GIF \u56FE\u7247\u9644\u4EF6\uFF0C\u4E0D\u843D\u76D8\u3002",
+      inputSchema: {
+        bug_id: string2().min(1).describe("Bug ID"),
+        attachment_id: string2().min(1).describe("Bug \u8BE6\u60C5\u4E2D\u7684\u9644\u4EF6 ID"),
+        report_path: string2().min(1).describe("\u5F53\u524D\u5206\u8BCA\u62A5\u544A\u7684\u7EDD\u5BF9\u8DEF\u5F84"),
+        ...optionalConfigPathSchema
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: true
+      }
+    },
+    async (input) => {
+      const result = await getZentaoBugAttachment(input);
+      return {
+        structuredContent: {
+          configPath: result.configPath,
+          reportPath: result.reportPath,
+          tokenAutoRefreshed: result.tokenAutoRefreshed,
+          ...result.metadata
+        },
+        content: [
+          {
+            type: "text",
+            text: `\u5DF2\u8BFB\u53D6 Bug ${result.metadata.bugId} \u7684\u56FE\u7247\u9644\u4EF6 ${result.metadata.name}\u3002`
+          },
+          {
+            type: "image",
+            data: result.data,
+            mimeType: result.metadata.mimeType
+          }
+        ]
+      };
+    }
+  );
+  server.registerTool(
     "workspace_select_for_bug",
     {
       title: "\u6388\u6743\u540E\u9009\u62E9 Bug \u4FEE\u6539\u76EE\u5F55",
@@ -23812,7 +25153,7 @@ function createOneClickRepairServer() {
         ...optionalConfigPathSchema
       },
       annotations: {
-        readOnlyHint: true,
+        readOnlyHint: false,
         destructiveHint: false,
         openWorldHint: false
       }
@@ -23841,8 +25182,10 @@ export {
   createOneClickRepairServer,
   getRepositoryByProject,
   getZentaoAuthStatus,
+  getZentaoBugAttachment,
   getZentaoBugDetail,
   listMyZentaoBugs,
+  recordBugAnalyses,
   selectWorkspaceForBug,
   setRepositoryByProject,
   startServer

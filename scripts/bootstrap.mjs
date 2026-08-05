@@ -48,6 +48,10 @@ export async function retireLegacySkill(options = {}) {
 function defaultConfig(baseUrl, existing = {}) {
   return {
     source: {
+      personalBugListMode: "assigned-to-me",
+      personalBugListPath: "my-work-bug-assignedTo--id_desc.html",
+      personalBugPageSize: 100,
+      maxPersonalBugPages: 20,
       productPageSize: 100,
       maxProductPages: 20,
       pageSize: 100,

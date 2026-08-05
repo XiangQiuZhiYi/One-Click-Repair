@@ -9,13 +9,20 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import * as z from "zod/v4";
 
 import {
+  downloadBugImage,
+  findBugAttachment,
+} from "../skills/zentao-frontend-bugfix/scripts/lib/attachment.mjs";
+import {
   ensureZentaoToken,
   findStoredToken,
   withAutomaticTokenRefresh,
 } from "../skills/zentao-frontend-bugfix/scripts/lib/auth.mjs";
 import { findDefaultConfigPath } from "../skills/zentao-frontend-bugfix/scripts/lib/config-path.mjs";
 import { loadConfig } from "../skills/zentao-frontend-bugfix/scripts/lib/config.mjs";
-import { writeTriageReport } from "../skills/zentao-frontend-bugfix/scripts/lib/report.mjs";
+import {
+  readTriageReport,
+  writeTriageReport,
+} from "../skills/zentao-frontend-bugfix/scripts/lib/report.mjs";
 import {
   findRepository,
   inspectRepository,
@@ -24,13 +31,13 @@ import {
 import { storeRepositoryByProject } from "../skills/zentao-frontend-bugfix/scripts/lib/repository-store.mjs";
 import {
   retriageExistingItems,
+  triageBugById,
   triageBugs,
 } from "../skills/zentao-frontend-bugfix/scripts/lib/triage.mjs";
-import { readJson } from "../skills/zentao-frontend-bugfix/scripts/lib/utils.mjs";
 import { selectCurrentWorkspace } from "../skills/zentao-frontend-bugfix/scripts/lib/workspace.mjs";
 
 const SERVER_NAME = "one-click-repair";
-const SERVER_VERSION = "0.7.3";
+const SERVER_VERSION = "0.11.0";
 
 const optionalConfigPathSchema = {
   config_path: z
@@ -40,13 +47,15 @@ const optionalConfigPathSchema = {
     .describe("可选的禅道配置绝对路径；日常使用时不要传"),
 };
 
-function toolResult(data, message) {
+function toolResult(data, message, options = {}) {
   return {
     structuredContent: data,
     content: [
       {
         type: "text",
-        text: `${message}\n${JSON.stringify(data, null, 2)}`,
+        text: options.includeJson === false
+          ? message
+          : `${message}\n${JSON.stringify(data, null, 2)}`,
       },
     ],
   };
@@ -79,18 +88,42 @@ async function readCurrentReport(config, reportPath) {
   }
   return {
     reportPath: requestedReportPath,
-    report: await readJson(requestedReportPath),
+    report: await readTriageReport(requestedReportPath),
   };
 }
 
-async function collectTriage(config) {
+async function readExistingCurrentReport(config, reportPath) {
+  try {
+    return await readCurrentReport(
+      config,
+      reportPath || path.resolve(config.outputDir, "triage.json"),
+    );
+  } catch (error) {
+    if (!reportPath && error.code === "ENOENT") return undefined;
+    throw error;
+  }
+}
+
+async function collectTriage(config, onProgress) {
   const token = await ensureZentaoToken(config);
-  const triage = await withAutomaticTokenRefresh(config, () => triageBugs(config));
-  const written = await writeTriageReport(config, triage.value);
+  onProgress?.("认证完成，正在读取指派给我的 Bug");
+  const triage = await withAutomaticTokenRefresh(
+    config,
+    () => triageBugs(config, { onProgress }),
+  );
+  const written = await writeTriageReport(config, triage.value, {
+    sourceErrors: triage.value.sourceErrors,
+    requestSummary: triage.value.requestSummary,
+    timings: triage.value.timings,
+  });
   return {
     reportPath: written.jsonPath,
     summaryPath: written.markdownPath,
     stats: written.report.stats,
+    fetchSummary: written.report.fetchSummary,
+    sourceErrors: written.report.sourceErrors,
+    requestSummary: written.report.requestSummary,
+    timings: written.report.timings,
     items: written.report.items,
     tokenSource: token.source,
     tokenAutoRefreshed: Boolean(token.refreshed || triage.tokenAutoRefreshed),
@@ -127,26 +160,141 @@ export async function getZentaoAuthStatus(input = {}) {
   }
 }
 
-export async function listMyZentaoBugs(input = {}) {
+export async function listMyZentaoBugs(input = {}, options = {}) {
   const { configPath, config } = await resolveConfig(input.config_path);
+  const parsedCursor = Number(input.cursor ?? 0);
+  const cursor = Number.isSafeInteger(parsedCursor) && parsedCursor >= 0
+    ? parsedCursor
+    : 0;
+  let result;
+  if (input.response_mode === "summary" && cursor > 0) {
+    const existing = await readCurrentReport(
+      config,
+      path.resolve(config.outputDir, "triage.json"),
+    );
+    result = {
+      configPath,
+      reportPath: existing.reportPath,
+      summaryPath: path.resolve(config.outputDir, "triage.md"),
+      stats: existing.report.stats,
+      fetchSummary: existing.report.fetchSummary,
+      sourceErrors: existing.report.sourceErrors,
+      requestSummary: existing.report.requestSummary,
+      timings: existing.report.timings,
+      items: existing.report.items,
+      tokenSource: "not-requested",
+      tokenAutoRefreshed: false,
+      zentaoRequested: false,
+    };
+  } else {
+    result = {
+      configPath,
+      ...(await collectTriage(config, options.onProgress)),
+      zentaoRequested: true,
+    };
+  }
+  if (input.response_mode !== "summary") return result;
+
+  const parsedLimit = Number(input.limit ?? 50);
+  const limit = Number.isSafeInteger(parsedLimit) && parsedLimit >= 1
+    ? Math.min(parsedLimit, 100)
+    : 50;
+  const pageItems = result.items.slice(cursor, cursor + limit).map((item) => ({
+    bugId: item.bug.id,
+    title: item.bug.title,
+    repositoryProject: item.bug.repositoryProject,
+    repositoryProjectSource: item.bug.repositoryProjectSource,
+    execution: item.bug.execution,
+    executionName: item.bug.executionName,
+    affectedVersion: item.bug.affectedVersion,
+    fetchStatus: item.bug.fetchStatus || "complete",
+    attachmentCount: item.bug.attachments?.length ?? 0,
+    triage: item.triage,
+    repository: item.repository
+      ? {
+          name: item.repository.name,
+          projectKey: item.repository.projectKey,
+          available: item.repository.available,
+        }
+      : undefined,
+  }));
+  const nextOffset = cursor + pageItems.length;
   return {
-    configPath,
-    ...(await collectTriage(config)),
+    configPath: result.configPath,
+    reportPath: result.reportPath,
+    summaryPath: result.summaryPath,
+    stats: result.stats,
+    fetchSummary: result.fetchSummary,
+    sourceErrors: result.sourceErrors,
+    requestSummary: result.requestSummary,
+    timings: result.timings,
+    tokenSource: result.tokenSource,
+    tokenAutoRefreshed: result.tokenAutoRefreshed,
+    zentaoRequested: result.zentaoRequested,
+    responseMode: "summary",
+    cursor: String(cursor),
+    nextCursor: nextOffset < result.items.length ? String(nextOffset) : undefined,
+    items: pageItems,
   };
 }
 
 export async function getZentaoBugDetail(input) {
-  const result = await listMyZentaoBugs(input);
-  const item = result.items.find(
-    (candidate) => String(candidate.bug.id) === String(input.bug_id),
+  const { configPath, config } = await resolveConfig(input.config_path);
+  const existing = await readExistingCurrentReport(config, input.report_path);
+  const bugId = String(input.bug_id);
+  const cachedItem = existing?.report.items.find(
+    (candidate) => String(candidate.bug.id) === bugId,
   );
-  if (!item) {
-    throw new Error(`当前分配给你的未关闭 Bug 中不存在 ${input.bug_id}`);
+  if (cachedItem && input.refresh !== true) {
+    return {
+      configPath,
+      reportPath: existing.reportPath,
+      summaryPath: path.resolve(config.outputDir, "triage.md"),
+      source: "local-report",
+      zentaoRequested: false,
+      item: cachedItem,
+    };
   }
+
+  await ensureZentaoToken(config);
+  const refreshed = await withAutomaticTokenRefresh(config, () =>
+    triageBugById(config, bugId),
+  );
+  const refreshedBug = {
+    ...refreshed.value.bug,
+    ...(cachedItem?.bug?.userSupplement
+      ? { userSupplement: cachedItem.bug.userSupplement }
+      : {}),
+  };
+  const [refreshedItem] = await retriageExistingItems(config, [
+    {
+      ...refreshed.value,
+      ...(cachedItem?.aiAnalysis ? { aiAnalysis: cachedItem.aiAnalysis } : {}),
+      bug: refreshedBug,
+    },
+  ]);
+  const items = existing
+    ? cachedItem
+      ? existing.report.items.map((candidate) =>
+          String(candidate.bug.id) === bugId ? refreshedItem : candidate,
+        )
+      : [...existing.report.items, refreshedItem]
+    : [refreshedItem];
+  const written = await writeTriageReport(config, items, {
+    scope: existing?.report.scope || "single-bug",
+    completeList: existing?.report.completeList ?? false,
+    sourceErrors: existing?.report.sourceErrors || [],
+    requestSummary: existing?.report.requestSummary || {},
+    timings: existing?.report.timings || {},
+  });
   return {
-    reportPath: result.reportPath,
-    summaryPath: result.summaryPath,
-    item,
+    configPath,
+    reportPath: written.jsonPath,
+    summaryPath: written.markdownPath,
+    source: "zentao-detail",
+    zentaoRequested: true,
+    tokenAutoRefreshed: refreshed.tokenAutoRefreshed,
+    item: refreshedItem,
   };
 }
 
@@ -204,7 +352,13 @@ export async function setRepositoryByProject(input) {
   if (existingReport) {
     const config = await loadConfig(configPath);
     const items = await retriageExistingItems(config, existingReport.items);
-    const written = await writeTriageReport(config, items);
+    const written = await writeTriageReport(config, items, {
+      scope: existingReport.scope,
+      completeList: existingReport.completeList,
+      sourceErrors: existingReport.sourceErrors,
+      requestSummary: existingReport.requestSummary,
+      timings: existingReport.timings,
+    });
     reportRefresh = {
       refreshed: true,
       source: "local-report",
@@ -268,7 +422,13 @@ export async function applyBugUserSupplement(input) {
     };
   });
   const items = await retriageExistingItems(config, updatedItems);
-  const written = await writeTriageReport(config, items);
+  const written = await writeTriageReport(config, items, {
+    scope: report.scope,
+    completeList: report.completeList,
+    sourceErrors: report.sourceErrors,
+    requestSummary: report.requestSummary,
+    timings: report.timings,
+  });
   const updatedItem = written.report.items.find(
     (candidate) => String(candidate.bug.id) === bugId,
   );
@@ -281,6 +441,108 @@ export async function applyBugUserSupplement(input) {
     summaryPath: written.markdownPath,
     stats: written.report.stats,
     item: updatedItem,
+  };
+}
+
+export async function recordBugAnalyses(input) {
+  const { configPath, config } = await resolveConfig(input.config_path);
+  const { report } = await readCurrentReport(config, input.report_path);
+  const analyses = input.analyses ?? [];
+  const bugIds = analyses.map((analysis) => String(analysis.bug_id));
+  if (new Set(bugIds).size !== bugIds.length) {
+    throw new Error("同一次分析保存中不能包含重复的 Bug ID");
+  }
+  const knownIds = new Set(report.items.map((item) => String(item.bug.id)));
+  const missing = bugIds.filter((bugId) => !knownIds.has(bugId));
+  if (missing.length) {
+    throw new Error(`分诊报告中找不到 Bug：${missing.join("、")}`);
+  }
+
+  const analyzedAt = new Date().toISOString();
+  const analysesById = new Map(
+    analyses.map((analysis) => [
+      String(analysis.bug_id),
+      {
+        summary: analysis.summary.trim(),
+        problemType: analysis.problem_type,
+        ...(analysis.subtype ? { subtype: analysis.subtype.trim() } : {}),
+        needsConfirmation: analysis.needs_confirmation,
+        ...(analysis.confirmation_question
+          ? { confirmationQuestion: analysis.confirmation_question.trim() }
+          : {}),
+        evidence: analysis.evidence.map((value) => value.trim()),
+        ...(analysis.proposed_change
+          ? { proposedChange: analysis.proposed_change.trim() }
+          : {}),
+        risk: analysis.risk,
+        analyzedAt,
+        source: "codex",
+      },
+    ]),
+  );
+  const updatedItems = report.items.map((item) => {
+    const aiAnalysis = analysesById.get(String(item.bug.id));
+    return aiAnalysis ? { ...item, aiAnalysis } : item;
+  });
+  const items = await retriageExistingItems(config, updatedItems);
+  const written = await writeTriageReport(config, items, {
+    scope: report.scope,
+    completeList: report.completeList,
+    sourceErrors: report.sourceErrors,
+    requestSummary: report.requestSummary,
+    timings: report.timings,
+  });
+  return {
+    updated: true,
+    source: "codex-analysis",
+    zentaoRequested: false,
+    configPath,
+    reportPath: written.jsonPath,
+    summaryPath: written.markdownPath,
+    count: analyses.length,
+    results: bugIds.map((bugId) => {
+      const item = written.report.items.find(
+        (candidate) => String(candidate.bug.id) === bugId,
+      );
+      return {
+        bugId,
+        category: item.triage.category,
+        decision: item.triage.decision,
+        needsConfirmation: item.aiAnalysis.needsConfirmation,
+      };
+    }),
+  };
+}
+
+export async function getZentaoBugAttachment(input, options = {}) {
+  const { configPath, config } = await resolveConfig(input.config_path);
+  const { report } = await readCurrentReport(config, input.report_path);
+  const bugId = String(input.bug_id);
+  const item = report.items.find(
+    (candidate) => String(candidate.bug.id) === bugId,
+  );
+  if (!item) throw new Error(`分诊报告中找不到 Bug：${bugId}`);
+  const attachment = findBugAttachment(item, input.attachment_id);
+  const ensureToken = options.ensureToken || ensureZentaoToken;
+  const withTokenRefresh =
+    options.withTokenRefresh ||
+    (config.source.type === "zentao-v1"
+      ? withAutomaticTokenRefresh
+      : async (_config, operation) => ({
+          value: await operation(),
+          tokenAutoRefreshed: false,
+        }));
+  if (config.source.type === "zentao-v1") await ensureToken(config);
+  const downloaded = await withTokenRefresh(
+    config,
+    () => downloadBugImage(config, bugId, attachment, options),
+    options.authOptions,
+  );
+  return {
+    configPath,
+    reportPath: input.report_path,
+    tokenAutoRefreshed: downloaded.tokenAutoRefreshed,
+    ...downloaded.value,
   };
 }
 
@@ -303,7 +565,7 @@ export function createOneClickRepairServer() {
     },
     {
       instructions:
-        "先调用 zentao_list_my_bugs 拉取并逐条语义分析 Bug，从评论、描述和复现步骤中的代码仓库线索识别前端项目，并按项目映射本地仓库，再向用户展示可直接修改、等待确认、人工处理和仓库待配置清单。用户可直接在聊天中纠正仓库、问题类型和确认状态；调用 bug_apply_user_supplement 在本地刷新现有报告，不要求回写禅道，也不重新拉取。用户提供仓库路径后，调用 repository_set_by_project 并传入本次 report_path。用户看过预览后，只要针对具体 Bug 明确确认修改，或直接提出具体修改方案，就已经完成授权；立即调用 workspace_select_for_bug，按情况传入 explicit-confirmation 或 user-provided-solution，绝不能再次索要确认。NEED_CONFIRM 和 HUMAN_REQUIRED 是默认分诊建议，不是用户授权后的死门禁；只有 BLOCKED 仍禁止修改。不得显示账号、密码或 Token，不操作 Git，不运行目标项目脚本。",
+        "先用 zentao_list_my_bugs 的 summary 模式拉取分页摘要，再按 Bug ID 调用 zentao_get_bug_detail 从本地报告读取完整信息；只有截图影响判断时才读取图片附件。逐条语义分析后，用 bug_record_analyses 批量持久化，再展示可直接修改、等待确认、人工处理、详情失败和仓库待配置清单。详情失败项保持 BLOCKED，可按 Bug 单独 refresh 重试。用户可直接在聊天中纠正仓库、问题类型和确认状态；调用 bug_apply_user_supplement 在本地刷新现有报告，不要求回写禅道，也不重新拉取。用户提供仓库路径后，调用 repository_set_by_project 并传入本次 report_path。用户看过预览后，只要针对具体 Bug 明确确认修改，或直接提出具体修改方案，就已经完成授权；立即调用 workspace_select_for_bug，按情况传入 explicit-confirmation 或 user-provided-solution，绝不能再次索要确认。NEED_CONFIRM 和 HUMAN_REQUIRED 是默认分诊建议，不是用户授权后的死门禁；只有 BLOCKED 仍禁止修改。不得显示账号、密码或 Token，不操作 Git，不运行目标项目脚本。",
     },
   );
 
@@ -333,18 +595,52 @@ export function createOneClickRepairServer() {
       title: "拉取并预分诊我的禅道 Bug",
       description:
         "拉取禅道中指派给当前用户的未关闭 Bug，补充详情、仓库映射和规则预分诊，并生成本地报告。语义分类仍由 Codex逐条完成。",
-      inputSchema: optionalConfigPathSchema,
+      inputSchema: {
+        response_mode: z
+          .enum(["full", "summary"])
+          .optional()
+          .describe("返回完整条目或分页摘要；默认 full 兼容旧调用"),
+        cursor: z
+          .string()
+          .regex(/^\d+$/u)
+          .optional()
+          .describe("summary 模式的零基偏移游标"),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .optional()
+          .describe("summary 模式每页数量，默认 50，最大 100"),
+        ...optionalConfigPathSchema,
+      },
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
         openWorldHint: true,
       },
     },
-    async (input) =>
-      toolResult(
-        await listMyZentaoBugs(input),
-        "已拉取并生成禅道 Bug 预分诊报告。",
-      ),
+    async (input, extra) => {
+      const onProgress = (message) => {
+        void Promise.resolve(
+          server.sendLoggingMessage(
+            { level: "info", data: { stage: "zentao-list", message } },
+            extra?.sessionId,
+          ),
+        ).catch(() => {});
+      };
+      const result = await listMyZentaoBugs(input, { onProgress });
+      const elapsed = Number.isFinite(result.timings?.totalMs)
+        ? `，耗时 ${(result.timings.totalMs / 1000).toFixed(2)} 秒`
+        : "";
+      return toolResult(
+        result,
+        result.responseMode === "summary"
+          ? `已直接读取指派给我的 Bug 并生成预分诊报告${elapsed}；本页返回 ${result.items.length} 条摘要。`
+          : `已直接读取指派给我的 Bug 并生成预分诊报告${elapsed}。`,
+        { includeJson: result.responseMode !== "summary" },
+      );
+    },
   );
 
   server.registerTool(
@@ -355,6 +651,15 @@ export function createOneClickRepairServer() {
         "根据 Bug ID 获取当前用户未关闭 Bug 的完整描述、步骤、评论、所属项目、执行和预分诊信息。",
       inputSchema: {
         bug_id: z.string().min(1).describe("禅道 Bug ID"),
+        report_path: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("可选的当前分诊报告路径；命中时直接读取本地报告"),
+        refresh: z
+          .boolean()
+          .optional()
+          .describe("是否忽略本地报告并只刷新该 Bug 的禅道详情"),
         ...optionalConfigPathSchema,
       },
       annotations: {
@@ -467,6 +772,88 @@ export function createOneClickRepairServer() {
   );
 
   server.registerTool(
+    "bug_record_analyses",
+    {
+      title: "持久化 Codex 对 Bug 的语义分析",
+      description:
+        "将 Codex 逐条形成的核心问题、用户类型、确认点、证据、建议修改和风险批量写入当前本地报告；不访问或回写禅道。",
+      inputSchema: {
+        report_path: z.string().min(1).describe("当前分诊报告的绝对路径"),
+        analyses: z
+          .array(
+            z.object({
+              bug_id: z.string().min(1).describe("Bug ID"),
+              summary: z.string().min(1).max(1000).describe("核心问题摘要"),
+              problem_type: z.enum(["逻辑", "样式", "需求"]),
+              subtype: z.string().min(1).max(100).optional(),
+              needs_confirmation: z.boolean(),
+              confirmation_question: z.string().min(1).max(1000).optional(),
+              evidence: z.array(z.string().min(1).max(500)).max(10),
+              proposed_change: z.string().min(1).max(2000).optional(),
+              risk: z.enum(["low", "medium", "high"]),
+            }),
+          )
+          .min(1)
+          .max(50),
+        ...optionalConfigPathSchema,
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+    },
+    async (input) =>
+      toolResult(
+        await recordBugAnalyses(input),
+        `已将 ${input.analyses.length} 条 Codex 语义分析写入本地报告。`,
+        { includeJson: false },
+      ),
+  );
+
+  server.registerTool(
+    "zentao_get_bug_attachment",
+    {
+      title: "读取禅道 Bug 图片附件",
+      description:
+        "只读取当前报告中已声明且与禅道同源的 PNG、JPEG、WebP 或 GIF 图片附件，不落盘。",
+      inputSchema: {
+        bug_id: z.string().min(1).describe("Bug ID"),
+        attachment_id: z.string().min(1).describe("Bug 详情中的附件 ID"),
+        report_path: z.string().min(1).describe("当前分诊报告的绝对路径"),
+        ...optionalConfigPathSchema,
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: true,
+      },
+    },
+    async (input) => {
+      const result = await getZentaoBugAttachment(input);
+      return {
+        structuredContent: {
+          configPath: result.configPath,
+          reportPath: result.reportPath,
+          tokenAutoRefreshed: result.tokenAutoRefreshed,
+          ...result.metadata,
+        },
+        content: [
+          {
+            type: "text",
+            text: `已读取 Bug ${result.metadata.bugId} 的图片附件 ${result.metadata.name}。`,
+          },
+          {
+            type: "image",
+            data: result.data,
+            mimeType: result.metadata.mimeType,
+          },
+        ],
+      };
+    },
+  );
+
+  server.registerTool(
     "workspace_select_for_bug",
     {
       title: "授权后选择 Bug 修改目录",
@@ -482,7 +869,7 @@ export function createOneClickRepairServer() {
         ...optionalConfigPathSchema,
       },
       annotations: {
-        readOnlyHint: true,
+        readOnlyHint: false,
         destructiveHint: false,
         openWorldHint: false,
       },

@@ -5,6 +5,10 @@
     "tokenEnv": "ZENTAO_TOKEN",
     "tokenFile": "../../../.bugfix-secrets/zentao-token",
     "accountFile": "../../../.bugfix-secrets/zentao-account",
+    "personalBugListMode": "assigned-to-me",
+    "personalBugListPath": "my-work-bug-assignedTo--id_desc.html",
+    "personalBugPageSize": 100,
+    "maxPersonalBugPages": 20,
     "productPageSize": 100,
     "maxProductPages": 20,
     "pageSize": 100,
@@ -13,7 +17,8 @@
     "detailConcurrency": 4,
     "requestTimeoutMs": 15000,
     "requestRetries": 2,
-    "retryDelayMs": 300
+    "retryDelayMs": 300,
+    "maxAttachmentBytes": 5242880
   },
   "outputDir": "../../../.bugfix-output",
   "repositoriesByProject": {

@@ -10,7 +10,7 @@
 
 ### 禅道开源版 21.6
 
-优先使用内置的 REST API v1 适配器：
+优先使用内置的“个人列表 + REST API v1 详情”适配器：
 
 ```json
 {
@@ -19,24 +19,45 @@
     "baseUrl": "https://zentao.example.com",
     "tokenEnv": "ZENTAO_TOKEN",
     "tokenFile": "./secrets/zentao-token",
-    "accountFile": "./secrets/zentao-account"
+    "accountFile": "./secrets/zentao-account",
+    "personalBugListMode": "assigned-to-me",
+    "personalBugListPath": "my-work-bug-assignedTo--id_desc.html",
+    "personalBugPageSize": 100,
+    "maxPersonalBugPages": 20,
+    "detailConcurrency": 4
   }
 }
 ```
 
-`currentUser` 可以省略，首次拉取时通过 `GET /api.php/v1/user` 从 Token 自动识别账号。
-如需固定账号或做离线测试，也可以显式填写。
+`currentUser` 可以省略，执行器会读取初始化时保存的账号文件；也可以显式填写。
 
 执行器会依次请求：
 
-1. `GET /api.php/v1/products`
-2. `GET /api.php/v1/products/{productID}/bugs?limit=100&page=1`
-3. 仅对指派给当前账号且未关闭的 Bug 请求 `GET /api.php/v1/bugs/{bugID}`
+1. 使用钥匙串凭据建立临时 Web Session；
+2. 读取个人“指派给我”页面及其必要分页；
+3. 仅对该列表中指派给当前账号且未关闭的 Bug 请求 `GET /api.php/v1/bugs/{bugID}`。
+
+默认不会请求产品列表或其他人的 Bug。Web Session Cookie 和密码只存在于本次调用内存
+中。报告会保存拉取模式、候选数量、详情请求数、重试数和各阶段耗时，不保存 Cookie、
+密码、Token、响应正文或敏感 URL 查询参数。
 
 如果禅道安装在子路径下，`baseUrl` 包含子路径，例如
 `https://example.com/zentao`。如果直接填写以 `/api.php/v1` 结尾的地址也可以。
 
-可用 `source.productIds` 限定产品 ID，避免扫描无关产品。Token 从
+如果实例定制了个人列表页面而不兼容安全解析器，可以显式启用旧兼容路径：
+
+```json
+{
+  "source": {
+    "personalBugListMode": "product-scan",
+    "productIds": [1, 2]
+  }
+}
+```
+
+只有 `product-scan` 模式会读取产品和产品 Bug 列表；此时建议用 `source.productIds`
+限定产品 ID。个人列表失败不会自动降级为全产品扫描，避免一次普通拉取意外变成数百次
+请求。Token 从
 `source.tokenEnv` 指定的环境变量读取，默认是 `ZENTAO_TOKEN`；如果环境变量不存在，
 则读取 `source.tokenFile`。
 
@@ -146,6 +167,30 @@ npm run start
 ```
 
 详情对象会覆盖列表项中的同名字段。批量补拉默认最多并发 4 个请求。
+单个详情失败不会中断整批拉取，该 Bug 会以 `detail_failed` 和 `BLOCKED` 保留；某个
+产品的 Bug 列表失败时其他产品仍继续处理。重试采用指数退避，并优先遵守
+`Retry-After`。
+
+### 图片附件
+
+Bug 详情中的 `files`，以及描述、复现步骤、评论富文本里的 `<img>`，会在清除 HTML
+前统一为附件元数据，并按文件 ID 或地址去重。只支持 PNG、JPEG、WebP 和 GIF，默认最大
+5 MiB；图片按需在内存中读取，不写入磁盘。下载地址优先读取附件中的
+`downloadUrl`、`url` 或 `webPath`。如果当前禅道只返回附件 ID，可配置：
+
+```json
+{
+  "source": {
+    "attachmentUrlTemplate": "{baseUrl}/your-download-route/{fileId}?bug={bugId}",
+    "maxAttachmentBytes": 5242880
+  }
+}
+```
+
+下载地址及重定向必须与 `baseUrl` 同源；Token 不会发送给其他域名。如果禅道在同一
+主机的富文本中生成 HTTP 图片地址，而 `baseUrl` 使用 HTTPS，执行器只会将该地址升级
+为配置中的 HTTPS 协议和端口。不同主机、非默认 HTTP 端口、SVG、未知类型、扩展名与
+内容不一致或超过限制的附件都会被拒绝。
 
 ## 接入自检
 

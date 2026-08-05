@@ -187,3 +187,35 @@ test("聊天补充可以纠正问题类型并解除已回答的确认点", () =>
   assert.equal(result.decision, "AUTO_FIX");
   assert.match(result.reasons.join("\n"), /用户已在聊天中补充/);
 });
+
+test("Codex 语义分析可以提出确认点但不能绕过高风险与客观阻塞", () => {
+  const baseBug = {
+    id: "semantic",
+    title: "页面行为需要调整",
+    description: "页面行为与预期不一致，需要根据规则调整。",
+    steps: "打开页面并执行操作。",
+    severity: 3,
+  };
+  const confirmation = classifyBug(baseBug, repository, policy, {
+    problemType: "逻辑",
+    needsConfirmation: true,
+    confirmationQuestion: "是否立即刷新？",
+    risk: "medium",
+  });
+  assert.equal(confirmation.decision, "NEED_CONFIRM");
+  assert.match(confirmation.questions.join("\n"), /是否立即刷新/);
+
+  const highRisk = classifyBug(baseBug, repository, policy, {
+    problemType: "样式",
+    needsConfirmation: false,
+    risk: "high",
+  });
+  assert.equal(highRisk.decision, "HUMAN_REQUIRED");
+
+  const blocked = classifyBug(baseBug, undefined, policy, {
+    problemType: "样式",
+    needsConfirmation: false,
+    risk: "low",
+  });
+  assert.equal(blocked.decision, "BLOCKED");
+});

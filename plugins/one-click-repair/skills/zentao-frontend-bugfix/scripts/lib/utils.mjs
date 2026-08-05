@@ -1,4 +1,5 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 export async function readJson(filePath) {
@@ -10,9 +11,36 @@ export async function readJson(filePath) {
   }
 }
 
+export async function ensurePrivateDirectory(directoryPath) {
+  await mkdir(directoryPath, { recursive: true, mode: 0o700 });
+  await chmod(directoryPath, 0o700);
+  return directoryPath;
+}
+
+export async function secureAtomicWrite(filePath, value, encoding = "utf8") {
+  const directoryPath = path.dirname(filePath);
+  await ensurePrivateDirectory(directoryPath);
+  const temporaryPath = path.join(
+    directoryPath,
+    `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`,
+  );
+  try {
+    await writeFile(temporaryPath, value, {
+      encoding,
+      mode: 0o600,
+      flag: "wx",
+    });
+    await chmod(temporaryPath, 0o600);
+    await rename(temporaryPath, filePath);
+    await chmod(filePath, 0o600);
+  } finally {
+    await rm(temporaryPath, { force: true });
+  }
+  return filePath;
+}
+
 export async function writeJson(filePath, value) {
-  await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  return secureAtomicWrite(filePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
 export function resolvePath(baseDir, value) {

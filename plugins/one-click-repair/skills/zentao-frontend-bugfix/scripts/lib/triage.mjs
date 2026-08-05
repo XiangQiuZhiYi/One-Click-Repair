@@ -1,7 +1,7 @@
 import { classifyBug } from "./classifier.mjs";
 import { normalizeAndFilterBugs } from "./normalize.mjs";
 import { findRepository, inspectRepository, repositoryKeyForBug } from "./repository.mjs";
-import { loadRawBugs } from "./source.mjs";
+import { loadRawBugById, loadRawBugsWithMetadata } from "./source.mjs";
 
 export async function retriageExistingItems(config, existingItems) {
   if (!Array.isArray(existingItems)) {
@@ -28,16 +28,42 @@ export async function retriageExistingItems(config, existingItems) {
       bug,
       repositoryKey,
       repository,
-      triage: classifyBug(bug, repository, config.policy),
+      triage: classifyBug(bug, repository, config.policy, existingItem.aiAnalysis),
     };
   }));
 }
 
 export async function triageBugs(config, options = {}) {
-  const rawBugs = await loadRawBugs(config, options);
-  const bugs = normalizeAndFilterBugs(rawBugs, config);
-  return retriageExistingItems(
+  const loaded = await loadRawBugsWithMetadata(config, options);
+  const bugs = normalizeAndFilterBugs(loaded.items, config);
+  const items = await retriageExistingItems(
     config,
     bugs.map((bug) => ({ bug })),
   );
+  Object.defineProperty(items, "sourceErrors", {
+    value: loaded.sourceErrors ?? [],
+    enumerable: false,
+  });
+  Object.defineProperty(items, "requestSummary", {
+    value: { ...(loaded.requestSummary ?? {}), matchedBugCount: items.length },
+    enumerable: false,
+  });
+  Object.defineProperty(items, "timings", {
+    value: loaded.timings ?? {},
+    enumerable: false,
+  });
+  return items;
+}
+
+export async function triageBugById(config, bugId, options = {}) {
+  const rawBug = await loadRawBugById(config, bugId, options);
+  const [bug] = normalizeAndFilterBugs([rawBug], config);
+  const assignedToCurrentUser =
+    config.source.filterAssignedToCurrentUser === false ||
+    bug?.assignee?.toLocaleLowerCase() === config.currentUser.toLocaleLowerCase();
+  if (!bug || !assignedToCurrentUser) {
+    throw new Error(`Bug ${bugId} 已关闭、未指派给当前账号或不存在`);
+  }
+  const [item] = await retriageExistingItems(config, [{ bug }]);
+  return item;
 }
